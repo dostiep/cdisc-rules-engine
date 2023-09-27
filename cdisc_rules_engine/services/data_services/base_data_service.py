@@ -32,6 +32,11 @@ from cdisc_rules_engine.utilities.utils import (
 from cdisc_rules_engine.utilities.sdtm_utilities import get_class_and_domain_metadata
 
 
+from cdisc_rules_engine.models.dataset.pandas_dataset import PandasDataset
+from cdisc_rules_engine.models.dataset.dask_dataset import DaskDataset
+from cdisc_rules_engine.models.dataset.dataset_interface import DatasetInterface
+
+
 def cached_dataset(dataset_type: str):
     """
     Decorator that can be applied to get_dataset_... functions
@@ -229,14 +234,35 @@ class BaseDataService(DataServiceInterface, ABC):
         return domain.startswith(variable)
 
     @staticmethod
-    def _replace_nans_in_numeric_cols_with_none(dataset: pd.DataFrame):
+    def _replace_nans_in_numeric_cols_with_none(dataset: DatasetInterface):
         """
         Replaces NaN in numeric columns with None.
         """
+        numeric_columns = dataset.data.select_dtypes(include=np.number).columns
+        dataset.data[numeric_columns] = dataset.data[numeric_columns].apply(
+            lambda x: x.replace({np.nan: None})
+        )
+        if isinstance(dataset, PandasDataset):
+            # For pandas DataFrame
+            dataset.data[numeric_columns] = dataset.data[numeric_columns].apply(
+                lambda x: x.replace({np.nan: None})
+            )
+        elif isinstance(dataset, DaskDataset):
+            # For Dask DataFrame
+            def replace_nans_with_none(df):
+                return df.data[numeric_columns].apply(
+                    lambda x: x.replace({np.nan: None})
+                )
+
+            dataset.data.map_partitions(replace_nans_with_none, meta=dataset.data)
+
+    """
+    def _replace_nans_in_numeric_cols_with_none(dataset: pd.DataFrame):
         numeric_columns = dataset.select_dtypes(include=np.number).columns
         dataset[numeric_columns] = dataset[numeric_columns].apply(
             lambda x: x.replace({np.nan: None})
         )
+    """
 
     async def _async_get_dataset(
         self, function_to_call: Callable, dataset_name: str, **kwargs

@@ -3,6 +3,7 @@ from io import IOBase
 from typing import List, Optional, Tuple
 
 import pandas
+import psutil
 
 from cdisc_rules_engine.interfaces import CacheServiceInterface, ConfigInterface
 from cdisc_rules_engine.models.dataset_metadata import DatasetMetadata
@@ -19,6 +20,8 @@ from cdisc_rules_engine.utilities.utils import (
     extract_file_name_from_path_string,
 )
 from .base_data_service import BaseDataService, cached_dataset
+
+from cdisc_rules_engine.models.dataset.dataset_interface import DatasetInterface
 
 
 class LocalDataService(BaseDataService):
@@ -50,9 +53,9 @@ class LocalDataService(BaseDataService):
         return all(item.lower() in files for item in file_names)
 
     @cached_dataset(DatasetTypes.CONTENTS.value)
-    def get_dataset(self, dataset_name: str, **params) -> pandas.DataFrame:
+    def get_dataset(self, dataset_name: str, **params) -> DatasetInterface:
         reader = self._reader_factory.get_service()
-        df = reader.from_file(dataset_name)
+        df = reader.from_file(dataset_name, self.choose_library(dataset_name))
         self._replace_nans_in_numeric_cols_with_none(df)
         return df
 
@@ -159,3 +162,21 @@ class LocalDataService(BaseDataService):
         if size_unit:  # convert file size from bytes to desired unit if needed
             file_metadata["size"] = convert_file_size(file_metadata["size"], size_unit)
         return file_metadata, metadata["contents_metadata"]
+
+    def choose_library(self, file_path):
+        """Chooses the appropriate library for working with a dataset.
+        Args: file_path: The path to the dataset file.
+        Returns: A Pandas DataFrame or Dask DataFrame,
+        depending on the size of the dataset and the
+        available memory in the computer."""
+
+        if self._config.getValue("use_library"):
+            return self._config.getValue("use_library")
+        file_size = os.path.getsize(file_path)
+        file_size_in_mb = file_size / (1024 * 1024)
+        available_memory = psutil.virtual_memory().available
+        available_memory_in_mb = available_memory / (1024 * 1024)
+        if file_size_in_mb > available_memory_in_mb * 0.7:
+            return "DaskDataset"
+        else:
+            return "PandasDataset"

@@ -216,7 +216,9 @@ class RulesEngine:
         """
         kwargs = {}
         builder = self.get_dataset_builder(rule, dataset_path, datasets, domain)
-        dataset = builder.get_dataset()
+        dataset = builder.get_dataset().data
+
+        print(type(dataset))
 
         # Update rule for certain rule types
         # SPECIAL CASES FOR RULE TYPES ###############################
