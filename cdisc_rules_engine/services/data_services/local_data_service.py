@@ -21,7 +21,9 @@ from cdisc_rules_engine.utilities.utils import (
 )
 from .base_data_service import BaseDataService, cached_dataset
 
-from cdisc_rules_engine.models.dataset.dataset_interface import DatasetInterface
+from typing import Union
+from cdisc_rules_engine.models.dataset.pandas_dataset import PandasDataset
+from cdisc_rules_engine.models.dataset.dask_dataset import DaskDataset
 
 
 class LocalDataService(BaseDataService):
@@ -53,9 +55,16 @@ class LocalDataService(BaseDataService):
         return all(item.lower() in files for item in file_names)
 
     @cached_dataset(DatasetTypes.CONTENTS.value)
-    def get_dataset(self, dataset_name: str, **params) -> DatasetInterface:
+    def get_dataset(
+        self, dataset_name: str, **params
+    ) -> Union[PandasDataset, DaskDataset]:
         reader = self._reader_factory.get_service()
         df = reader.from_file(dataset_name, self.choose_library(dataset_name))
+
+        print(type(df))
+
+        # HERE the method below returns a Pandas regardless of inbound class
+
         self._replace_nans_in_numeric_cols_with_none(df)
         return df
 
@@ -176,7 +185,10 @@ class LocalDataService(BaseDataService):
         file_size_in_mb = file_size / (1024 * 1024)
         available_memory = psutil.virtual_memory().available
         available_memory_in_mb = available_memory / (1024 * 1024)
-        if file_size_in_mb > available_memory_in_mb * 0.7:
+
+        # PDO changed for testing
+
+        if file_size_in_mb > available_memory_in_mb * 0.00001:
             return "DaskDataset"
         else:
             return "PandasDataset"

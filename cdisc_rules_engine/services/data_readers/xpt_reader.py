@@ -11,8 +11,6 @@ from typing import Union
 from cdisc_rules_engine.models.dataset.pandas_dataset import PandasDataset
 from cdisc_rules_engine.models.dataset.dask_dataset import DaskDataset
 
-# from cdisc_rules_engine.models.dataset.dataset_interface import DatasetInterface
-
 
 class XPTReader(DataReaderInterface):
     def read(self, data):
@@ -28,12 +26,11 @@ class XPTReader(DataReaderInterface):
         elif library == "DaskDataset":
             df = DaskDataset(
                 dd.from_pandas(
-                    pd.read_sas(file_path, format="xport", encoding="utf-8")
-                ),
-                npartitions=2,
+                    pd.read_sas(file_path, format="xport", encoding="utf-8"),
+                    npartitions=2,
+                )
             )
         df._data = self._format_floats(df)
-
         return df
 
     def _format_floats(

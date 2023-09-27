@@ -31,10 +31,9 @@ from cdisc_rules_engine.utilities.utils import (
 )
 from cdisc_rules_engine.utilities.sdtm_utilities import get_class_and_domain_metadata
 
-
+from typing import Union
 from cdisc_rules_engine.models.dataset.pandas_dataset import PandasDataset
 from cdisc_rules_engine.models.dataset.dask_dataset import DaskDataset
-from cdisc_rules_engine.models.dataset.dataset_interface import DatasetInterface
 
 
 def cached_dataset(dataset_type: str):
@@ -234,7 +233,9 @@ class BaseDataService(DataServiceInterface, ABC):
         return domain.startswith(variable)
 
     @staticmethod
-    def _replace_nans_in_numeric_cols_with_none(dataset: DatasetInterface):
+    def _replace_nans_in_numeric_cols_with_none(
+        dataset: Union[PandasDataset, DaskDataset]
+    ):
         """
         Replaces NaN in numeric columns with None.
         """
