@@ -1,5 +1,12 @@
-import pandas as pd
+# import pandas as pd
 import xport.v56
+
+import pyreadstat
+import os
+
+# import datetime
+# import sys
+
 from xport import LOG as XPORT_LOG
 
 from cdisc_rules_engine.services import logger
@@ -17,6 +24,53 @@ class DatasetMetadataReader:
 
     # TODO. Maybe in future it is worth having multiple constructors
     #  like from_bytes, from_file etc. But now there is no immediate need for that.
+
+    def __init__(self, contents_in_bytes: bytes, file_name: str):
+        self.file_name = os.path.join(
+            "..\\Examples\\sdtmshort",
+            file_name,
+        )
+        self._metadata_container = None
+        self._domain_name = None
+
+    def read(self) -> dict:
+        _, self.meta = pyreadstat.read_xport(self.file_name, metadataonly=True)
+        self.df, _ = pyreadstat.read_xport(
+            self.file_name, usecols=["STUDYID", "DOMAIN"]
+        )
+        self._domain_name = self._extract_domain_name(self.df)
+        self._metadata_container = {
+            "variable_labels": self.meta.column_labels,
+            "variable_names": self.meta.column_names,
+            "variable_formats": [
+                value if value != "NULL" else ""
+                for value in self.meta.original_variable_types.values()
+            ],
+            "variable_name_to_label_map": self.meta.column_names_to_labels,
+            "variable_name_to_data_type_map": self.meta.readstat_variable_types,
+            "variable_name_to_size_map": self.meta.variable_storage_width,
+            "number_of_variables": self.meta.number_columns,
+            "dataset_label": self.meta.file_label,
+            "dataset_length": self.df.shape[0],
+            "domain_name": self._domain_name,
+            "dataset_name": self.meta.table_name,
+            "dataset_modification_date": None,
+        }
+        self._convert_variable_types()
+        self._metadata_container["adam_info"] = self._extract_adam_info(
+            self._metadata_container["variable_names"]
+        )
+        logger.info(f"Extracted dataset metadata. metadata={self._metadata_container}")
+        return self._metadata_container
+
+    def _extract_domain_name(self, df):
+        if "DOMAIN" in df.columns:
+            return df.iloc[0]["DOMAIN"]
+        else:
+            return None
+
+    """
+
     def __init__(self, contents_in_bytes: bytes, file_name: str):
         self._file_contents = contents_in_bytes
         self._metadata_container = None
@@ -24,9 +78,9 @@ class DatasetMetadataReader:
         self._dataset_name = file_name.split(".")[0].upper()
 
     def read(self) -> dict:
-        """
-        Extracts metadata from binary contents of .xpt file.
-        """
+
+        print(datetime.datetime.now())
+
         dataset_container = xport.v56.loads(self._file_contents)
         dataset_id = next(iter(dataset_container))
         dataset = dataset_container.get(dataset_id)
@@ -57,6 +111,11 @@ class DatasetMetadataReader:
             self._metadata_container["variable_names"]
         )
         logger.info(f"Extracted dataset metadata. metadata={self._metadata_container}")
+
+        print(self._metadata_container)
+        print(datetime.datetime.now())
+        sys.exit(0)
+
         return self._metadata_container
 
     def _extract_domain_name(self, df):
@@ -71,6 +130,7 @@ class DatasetMetadataReader:
         except IndexError:
             pass
         return None
+    """
 
     def _convert_variable_types(self):
         """
