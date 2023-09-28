@@ -42,6 +42,9 @@ from cdisc_rules_engine.utilities.utils import (
 from cdisc_rules_engine.dataset_builders import builder_factory
 
 
+import dask.dataframe as dd
+
+
 class RulesEngine:
     def __init__(
         self,
@@ -218,8 +221,6 @@ class RulesEngine:
         builder = self.get_dataset_builder(rule, dataset_path, datasets, domain)
         dataset = builder.get_dataset().data
 
-        print(type(dataset))
-
         # Update rule for certain rule types
         # SPECIAL CASES FOR RULE TYPES ###############################
         # TODO: Handle these special cases better.
@@ -282,7 +283,7 @@ class RulesEngine:
     def execute_rule(
         self,
         rule: dict,
-        dataset: pd.DataFrame,
+        dataset: Union[pd.DataFrame, dd.core.DataFrame],
         dataset_path: str,
         datasets: List[dict],
         domain: str,

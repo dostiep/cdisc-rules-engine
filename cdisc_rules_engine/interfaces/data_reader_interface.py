@@ -16,5 +16,5 @@ class DataReaderInterface(ABC):
         """
         raise NotImplementedError
 
-    def from_file(self, file_path, library):
+    def from_file(self, file_path):
         raise NotImplementedError

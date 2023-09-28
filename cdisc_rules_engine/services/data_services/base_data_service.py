@@ -7,6 +7,7 @@ import os
 import numpy as np
 import pandas as pd
 
+
 from cdisc_rules_engine.constants.domains import AP_DOMAIN_LENGTH
 from cdisc_rules_engine.interfaces import (
     CacheServiceInterface,
@@ -30,10 +31,6 @@ from cdisc_rules_engine.utilities.utils import (
     search_in_list_of_dicts,
 )
 from cdisc_rules_engine.utilities.sdtm_utilities import get_class_and_domain_metadata
-
-from typing import Union
-from cdisc_rules_engine.models.dataset.pandas_dataset import PandasDataset
-from cdisc_rules_engine.models.dataset.dask_dataset import DaskDataset
 
 
 def cached_dataset(dataset_type: str):
@@ -233,37 +230,14 @@ class BaseDataService(DataServiceInterface, ABC):
         return domain.startswith(variable)
 
     @staticmethod
-    def _replace_nans_in_numeric_cols_with_none(
-        dataset: Union[PandasDataset, DaskDataset]
-    ):
+    def _replace_nans_in_numeric_cols_with_none(dataset: pd.DataFrame):
         """
         Replaces NaN in numeric columns with None.
         """
-        numeric_columns = dataset.data.select_dtypes(include=np.number).columns
-        dataset.data[numeric_columns] = dataset.data[numeric_columns].apply(
-            lambda x: x.replace({np.nan: None})
-        )
-        if isinstance(dataset, PandasDataset):
-            # For pandas DataFrame
-            dataset.data[numeric_columns] = dataset.data[numeric_columns].apply(
-                lambda x: x.replace({np.nan: None})
-            )
-        elif isinstance(dataset, DaskDataset):
-            # For Dask DataFrame
-            def replace_nans_with_none(df):
-                return df.data[numeric_columns].apply(
-                    lambda x: x.replace({np.nan: None})
-                )
-
-            dataset.data.map_partitions(replace_nans_with_none, meta=dataset.data)
-
-    """
-    def _replace_nans_in_numeric_cols_with_none(dataset: pd.DataFrame):
         numeric_columns = dataset.select_dtypes(include=np.number).columns
         dataset[numeric_columns] = dataset[numeric_columns].apply(
             lambda x: x.replace({np.nan: None})
         )
-    """
 
     async def _async_get_dataset(
         self, function_to_call: Callable, dataset_name: str, **kwargs

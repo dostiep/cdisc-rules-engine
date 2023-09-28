@@ -3,6 +3,8 @@ from io import IOBase
 from typing import List, Optional, Tuple
 
 import pandas
+import dask.dataframe as dd
+
 import psutil
 
 from cdisc_rules_engine.interfaces import CacheServiceInterface, ConfigInterface
@@ -59,13 +61,13 @@ class LocalDataService(BaseDataService):
         self, dataset_name: str, **params
     ) -> Union[PandasDataset, DaskDataset]:
         reader = self._reader_factory.get_service()
-        df = reader.from_file(dataset_name, self.choose_library(dataset_name))
+        data = reader.from_file(dataset_name)
+        self._replace_nans_in_numeric_cols_with_none(data)
 
-        print(type(df))
-
-        # HERE the method below returns a Pandas regardless of inbound class
-
-        self._replace_nans_in_numeric_cols_with_none(df)
+        if self.choose_library(dataset_name) == "PandasDataset":
+            df = PandasDataset(data)
+        else:
+            df = DaskDataset(dd.from_pandas(data, npartitions=2))
         return df
 
     @cached_dataset(DatasetTypes.METADATA.value)
@@ -188,7 +190,7 @@ class LocalDataService(BaseDataService):
 
         # PDO changed for testing
 
-        if file_size_in_mb > available_memory_in_mb * 0.00001:
+        if file_size_in_mb > available_memory_in_mb * 0.0001:
             return "DaskDataset"
         else:
             return "PandasDataset"
