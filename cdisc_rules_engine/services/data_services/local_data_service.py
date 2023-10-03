@@ -63,12 +63,9 @@ class LocalDataService(BaseDataService):
         reader = self._reader_factory.get_service()
         data = reader.from_file(dataset_name)
         self._replace_nans_in_numeric_cols_with_none(data)
-
-        if self.choose_library(dataset_name) == "PandasDataset":
-            df = PandasDataset(data)
-        else:
-            df = DaskDataset(dd.from_pandas(data, npartitions=2))
-        return df
+        return self.__choose_library(
+            data, self.__get_dataset_metadata(dataset_name, size_unit="MB")[0]["size"]
+        )
 
     @cached_dataset(DatasetTypes.METADATA.value)
     def get_dataset_metadata(
@@ -174,23 +171,16 @@ class LocalDataService(BaseDataService):
             file_metadata["size"] = convert_file_size(file_metadata["size"], size_unit)
         return file_metadata, metadata["contents_metadata"]
 
-    def choose_library(self, file_path):
+    def __choose_library(self, data, file_size_in_mb):
         """Chooses the appropriate library for working with a dataset.
         Args: file_path: The path to the dataset file.
         Returns: A Pandas DataFrame or Dask DataFrame,
         depending on the size of the dataset and the
         available memory in the computer."""
-
         if self._config.getValue("use_library"):
             return self._config.getValue("use_library")
-        file_size = os.path.getsize(file_path)
-        file_size_in_mb = file_size / (1024 * 1024)
-        available_memory = psutil.virtual_memory().available
-        available_memory_in_mb = available_memory / (1024 * 1024)
-
-        # PDO changed for testing
-
-        if file_size_in_mb > available_memory_in_mb * 0.0001:
-            return "DaskDataset"
+        available_memory_in_mb = psutil.virtual_memory().available / (1024 * 1024)
+        if file_size_in_mb > available_memory_in_mb * 0.7:
+            return DaskDataset(dd.from_pandas(data, npartitions=2))
         else:
-            return "PandasDataset"
+            return PandasDataset(data)
