@@ -3,15 +3,8 @@ from unittest.mock import MagicMock
 import numpy as np
 import pandas as pd
 
-import pytest
-
 from cdisc_rules_engine.dummy_models.dummy_dataset import DummyDataset
 from cdisc_rules_engine.services.data_services import DummyDataService
-
-from cdisc_rules_engine.models.dataset.pandas_dataset import PandasDataset
-
-
-from unittest.mock import Mock, patch
 
 
 def test_get_dataset():
@@ -58,34 +51,34 @@ def test_get_dataset():
     data_service = DummyDataService(
         MagicMock(), MagicMock(), MagicMock(), data=datasets
     )
-    dataset = data_service.get_dataset("ae.xpt")
-    assert isinstance(dataset, PandasDataset)
-    assert dataset.data["AESEQ"].to_list() == [
+    dataset = data_service.get_dataset("ae.xpt").data
+    assert isinstance(dataset, pd.DataFrame)
+    assert dataset["AESEQ"].to_list() == [
         1,
         2,
         3,
         4,
     ]
-    assert dataset.data["AEDY"].to_list() == [
+    assert dataset["AEDY"].to_list() == [
         1,
         None,
         None,
         None,
     ]
-    assert dataset.data["AENUM"].to_list() == [
+    assert dataset["AENUM"].to_list() == [
         1.0,
         2.0,
         3.0,
         4.0,
     ]
-    assert dataset.data["AENUM"].dtype == "float64"
-    assert dataset.data["AEORNRLO"].to_list() == [
+    assert dataset["AENUM"].dtype == "float64"
+    assert dataset["AEORNRLO"].to_list() == [
         "",
         "",
         "",
         "TEST",
     ]
-    assert dataset.data["AESTNRHI"].to_list() == [
+    assert dataset["AESTNRHI"].to_list() == [
         None,
         None,
         None,
@@ -144,65 +137,3 @@ def test_get_variables_metadata():
     assert metadata["variable_data_type"].iloc[0] == "integer"
     assert metadata["variable_size"].iloc[0] == 5
     assert metadata["variable_order_number"].iloc[0] == 1
-
-
-@pytest.mark.parametrize(
-    "file_size, available_memory, expected_library",
-    [
-        (1 * 1024 * 1024, 100 * 1024 * 1024, "PandasDataset"),
-        (100 * 1024 * 1024, 10 * 1024 * 1024, "DaskDataset"),
-        (70 * 1024 * 1024, 100 * 1024 * 1024, "PandasDataset"),
-        (70.1 * 1024 * 1024, 100 * 1024 * 1024, "DaskDataset"),
-    ],
-)
-def test_choose_library(file_size, available_memory, expected_library):
-    dataset_data = [
-        {
-            "domain": "AE",
-            "filename": "ae.xpt",
-            "name": "AE",
-            "records": {
-                "AESEQ": [
-                    1,
-                    2,
-                    3,
-                    4,
-                ],
-                "AENUM": [
-                    1.0,
-                    2.0,
-                    3.0,
-                    4.0,
-                ],
-                "AEDY": [
-                    1,
-                    np.nan,
-                    np.nan,
-                    np.nan,
-                ],
-                "AEORNRLO": [
-                    "",
-                    "",
-                    "",
-                    "TEST",
-                ],
-                "AESTNRHI": [
-                    None,
-                    None,
-                    None,
-                    None,
-                ],
-            },
-        }
-    ]
-    datasets = [DummyDataset(dataset) for dataset in dataset_data]
-    data_service = DummyDataService(
-        MagicMock(), MagicMock(), MagicMock(), data=datasets
-    )
-    data = data_service.get_dataset("ae.xpt").data
-    mock_virtual_memory = Mock()
-    mock_virtual_memory.available = available_memory
-
-    with patch("psutil.virtual_memory", return_value=mock_virtual_memory):
-        library = data_service.choose_library(data, file_size).__class__.__name__
-        assert library == expected_library

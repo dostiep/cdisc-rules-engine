@@ -78,10 +78,9 @@ def test_get_variables_metdata():
 @pytest.mark.parametrize(
     "file_size, available_memory, expected_library",
     [
-        (1, 100 * 1024 * 1024, "PandasDataset"),
-        (100, 10 * 1024 * 1024, "DaskDataset"),
-        (70, 100 * 1024 * 1024, "PandasDataset"),
-        (70.1, 100 * 1024 * 1024, "DaskDataset"),
+        (1024 * 1024, 100 * 1024 * 1024, "PandasDataset"),
+        (100 * 1024 * 1024, 10 * 1024 * 1024, "DaskDataset"),
+        (70 * 1024 * 1024, 100 * 1024 * 1024, "DaskDataset"),
     ],
 )
 def test_choose_library(file_size, available_memory, expected_library):
@@ -94,7 +93,10 @@ def test_choose_library(file_size, available_memory, expected_library):
     mock_virtual_memory.available = available_memory
     dataset_path = f"{os.path.dirname(__file__)}/../resources/test_adam_dataset.xpt"
     data = pd.read_sas(dataset_path, format="xport", encoding="utf-8")
-
     with patch("psutil.virtual_memory", return_value=mock_virtual_memory):
-        library = data_service.choose_library(data, file_size).__class__.__name__
+        File = os.path.join(os.path.dirname(__file__), "test_dataset.csv")
+        with open(File, "wb") as f:
+            f.write(b"a,b\n" * file_size)
+        library = data_service.choose_library(File, data).__class__.__name__
+        os.remove(File)
         assert library == expected_library

@@ -63,9 +63,7 @@ class LocalDataService(BaseDataService):
         reader = self._reader_factory.get_service()
         data = reader.from_file(dataset_name)
         self._replace_nans_in_numeric_cols_with_none(data)
-        return self.choose_library(
-            data, self.__get_dataset_metadata(dataset_name, size_unit="MB")[0]["size"]
-        )
+        return self.choose_library(dataset_name, data)
 
     @cached_dataset(DatasetTypes.METADATA.value)
     def get_dataset_metadata(
@@ -171,14 +169,14 @@ class LocalDataService(BaseDataService):
             file_metadata["size"] = convert_file_size(file_metadata["size"], size_unit)
         return file_metadata, metadata["contents_metadata"]
 
-    def choose_library(self, data, file_size_in_mb):
+    def choose_library(self, file_path, data):
         """Chooses the appropriate library for working with a dataset.
         Args: file_path: The path to the dataset file.
+              data: The dataframe to insert in the dataset instance.
         Returns: A Pandas DataFrame or Dask DataFrame,
         depending on the size of the dataset and the
         available memory in the computer."""
-        if self._config.getValue("use_library"):
-            return self._config.getValue("use_library")
+        file_size_in_mb = os.path.getsize(file_path) / (1024 * 1024)
         available_memory_in_mb = psutil.virtual_memory().available / (1024 * 1024)
         if file_size_in_mb > available_memory_in_mb * 0.7:
             return DaskDataset(dd.from_pandas(data, npartitions=2))

@@ -3,9 +3,6 @@ from io import IOBase
 from typing import List, Optional
 
 import pandas as pd
-import dask.dataframe as dd
-
-import psutil
 
 from cdisc_rules_engine.dummy_models.dummy_dataset import DummyDataset
 from cdisc_rules_engine.exceptions.custom_exceptions import DatasetNotFoundError
@@ -15,9 +12,7 @@ from cdisc_rules_engine.models.dataset_types import DatasetTypes
 from cdisc_rules_engine.services.data_readers import DataReaderFactory
 from cdisc_rules_engine.services.data_services import BaseDataService
 
-from typing import Union
 from cdisc_rules_engine.models.dataset.pandas_dataset import PandasDataset
-from cdisc_rules_engine.models.dataset.dask_dataset import DaskDataset
 
 
 class DummyDataService(BaseDataService):
@@ -61,17 +56,13 @@ class DummyDataService(BaseDataService):
                 return dataset
         return None
 
-    def get_dataset(
-        self, dataset_name: str, **params
-    ) -> Union[PandasDataset, DaskDataset]:
+    def get_dataset(self, dataset_name: str, **params) -> PandasDataset:
         dataset: Optional[DummyDataset] = self.get_dataset_data(dataset_name)
         if dataset is not None:
             df: pd.DataFrame = dataset.data
             df = df.applymap(lambda x: x.decode("utf-8") if isinstance(x, bytes) else x)
             self._replace_nans_in_numeric_cols_with_none(df)
-            return self.choose_library(
-                df, self.__get_dataset_metadata(dataset_name)["dataset_size"][0]
-            )
+            return PandasDataset(df)
         else:
             return PandasDataset(pd.DataFrame())
 
@@ -155,18 +146,3 @@ class DummyDataService(BaseDataService):
         if dataset:
             metadata_to_return: dict = dataset.get_metadata()
         return metadata_to_return
-
-    def choose_library(self, data, file_size):
-        """Chooses the appropriate library for working with a dataset.
-        Args: file_path: The path to the dataset file.
-        Returns: A Pandas DataFrame or Dask DataFrame,
-        depending on the size of the dataset and the
-        available memory in the computer."""
-        if self._config.getValue("use_library"):
-            return self._config.getValue("use_library")
-        file_size_in_mb = file_size / (1024 * 1024)
-        available_memory_in_mb = psutil.virtual_memory().available / (1024 * 1024)
-        if file_size_in_mb > available_memory_in_mb * 0.7:
-            return DaskDataset(dd.from_pandas(data, npartitions=2))
-        else:
-            return PandasDataset(data)
