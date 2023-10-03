@@ -69,7 +69,7 @@ class DummyDataService(BaseDataService):
             df: pd.DataFrame = dataset.data
             df = df.applymap(lambda x: x.decode("utf-8") if isinstance(x, bytes) else x)
             self._replace_nans_in_numeric_cols_with_none(df)
-            return self.__choose_library(
+            return self.choose_library(
                 df, self.__get_dataset_metadata(dataset_name)["dataset_size"][0]
             )
         else:
@@ -156,7 +156,7 @@ class DummyDataService(BaseDataService):
             metadata_to_return: dict = dataset.get_metadata()
         return metadata_to_return
 
-    def __choose_library(self, data, file_size):
+    def choose_library(self, data, file_size):
         """Chooses the appropriate library for working with a dataset.
         Args: file_path: The path to the dataset file.
         Returns: A Pandas DataFrame or Dask DataFrame,

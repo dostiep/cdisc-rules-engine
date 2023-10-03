@@ -6,6 +6,8 @@ import pytest
 from cdisc_rules_engine.config.config import ConfigService
 
 from cdisc_rules_engine.services.data_services import LocalDataService
+from unittest.mock import Mock, patch
+from cdisc_rules_engine.models.dataset.pandas_dataset import PandasDataset
 
 
 def test_read_metadata():
@@ -50,7 +52,7 @@ def test_get_dataset():
         config=ConfigService(), cache_service=mock_cache
     )
     data = data_service.get_dataset(dataset_name=dataset_path)
-    assert isinstance(data, pd.DataFrame)
+    assert isinstance(data, PandasDataset)
 
 
 def test_get_variables_metdata():
@@ -71,3 +73,28 @@ def test_get_variables_metdata():
     ]
     for key in expected_keys:
         assert key in data
+
+
+@pytest.mark.parametrize(
+    "file_size, available_memory, expected_library",
+    [
+        (1, 100 * 1024 * 1024, "PandasDataset"),
+        (100, 10 * 1024 * 1024, "DaskDataset"),
+        (70, 100 * 1024 * 1024, "PandasDataset"),
+        (70.1, 100 * 1024 * 1024, "DaskDataset"),
+    ],
+)
+def test_choose_library(file_size, available_memory, expected_library):
+    mock_cache = MagicMock()
+    mock_cache.get.return_value = None
+    data_service = LocalDataService.get_instance(
+        config=ConfigService(), cache_service=mock_cache
+    )
+    mock_virtual_memory = Mock()
+    mock_virtual_memory.available = available_memory
+    dataset_path = f"{os.path.dirname(__file__)}/../resources/test_adam_dataset.xpt"
+    data = pd.read_sas(dataset_path, format="xport", encoding="utf-8")
+
+    with patch("psutil.virtual_memory", return_value=mock_virtual_memory):
+        library = data_service.choose_library(data, file_size).__class__.__name__
+        assert library == expected_library

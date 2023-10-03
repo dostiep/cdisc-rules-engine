@@ -63,7 +63,7 @@ class LocalDataService(BaseDataService):
         reader = self._reader_factory.get_service()
         data = reader.from_file(dataset_name)
         self._replace_nans_in_numeric_cols_with_none(data)
-        return self.__choose_library(
+        return self.choose_library(
             data, self.__get_dataset_metadata(dataset_name, size_unit="MB")[0]["size"]
         )
 
@@ -171,7 +171,7 @@ class LocalDataService(BaseDataService):
             file_metadata["size"] = convert_file_size(file_metadata["size"], size_unit)
         return file_metadata, metadata["contents_metadata"]
 
-    def __choose_library(self, data, file_size_in_mb):
+    def choose_library(self, data, file_size_in_mb):
         """Chooses the appropriate library for working with a dataset.
         Args: file_path: The path to the dataset file.
         Returns: A Pandas DataFrame or Dask DataFrame,
