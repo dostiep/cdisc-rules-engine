@@ -1528,24 +1528,28 @@ def test_validate_split_dataset_variables_metadata(
     """
     Unit test for validating variables metadata of a split dataset.
     """
-    first_dataset_part = pd.DataFrame.from_dict(  # this part should flag an error
-        {
-            "variable_name": ["STUDYIDLONG", "DOMAINLONG"],
-            "variable_size": [5, 20],
-            "variable_label": [
-                "Study Identifier Study Identifier Very Long",
-                "Domain Name Domain Name Very Long",
-            ],
-            "variable_data_type": ["Char", "Char"],
-        }
+    first_dataset_part = PandasDataset(
+        pd.DataFrame.from_dict(  # this part should flag an error
+            {
+                "variable_name": ["STUDYIDLONG", "DOMAINLONG"],
+                "variable_size": [5, 20],
+                "variable_label": [
+                    "Study Identifier Study Identifier Very Long",
+                    "Domain Name Domain Name Very Long",
+                ],
+                "variable_data_type": ["Char", "Char"],
+            }
+        )
     )
-    second_dataset_part = pd.DataFrame.from_dict(
-        {
-            "variable_name": ["STUDYID", "DOMAIN"],
-            "variable_size": [5, 20],
-            "variable_label": ["Study Identifier", "Domain Name"],
-            "variable_data_type": ["Char", "Char"],
-        }
+    second_dataset_part = PandasDataset(
+        pd.DataFrame.from_dict(
+            {
+                "variable_name": ["STUDYID", "DOMAIN"],
+                "variable_size": [5, 20],
+                "variable_label": ["Study Identifier", "Domain Name"],
+                "variable_data_type": ["Char", "Char"],
+            }
+        )
     )
 
     mock_async_get_datasets.return_value = [

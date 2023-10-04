@@ -23,7 +23,7 @@ from cdisc_rules_engine.utilities.utils import (
 )
 from .base_data_service import BaseDataService, cached_dataset
 
-from typing import Union
+from cdisc_rules_engine.models.dataset.dataset_interface import DatasetInterface
 from cdisc_rules_engine.models.dataset.pandas_dataset import PandasDataset
 from cdisc_rules_engine.models.dataset.dask_dataset import DaskDataset
 
@@ -57,9 +57,7 @@ class LocalDataService(BaseDataService):
         return all(item.lower() in files for item in file_names)
 
     @cached_dataset(DatasetTypes.CONTENTS.value)
-    def get_dataset(
-        self, dataset_name: str, **params
-    ) -> Union[PandasDataset, DaskDataset]:
+    def get_dataset(self, dataset_name: str, **params) -> DatasetInterface:
         reader = self._reader_factory.get_service()
         data = reader.from_file(dataset_name)
         self._replace_nans_in_numeric_cols_with_none(data)

@@ -7,7 +7,7 @@ from cdisc_rules_engine.config.config import ConfigService
 
 from cdisc_rules_engine.services.data_services import LocalDataService
 from unittest.mock import Mock, patch
-from cdisc_rules_engine.models.dataset.pandas_dataset import PandasDataset
+from cdisc_rules_engine.models.dataset.dataset_interface import DatasetInterface
 
 
 def test_read_metadata():
@@ -52,7 +52,7 @@ def test_get_dataset():
         config=ConfigService(), cache_service=mock_cache
     )
     data = data_service.get_dataset(dataset_name=dataset_path)
-    assert isinstance(data, PandasDataset)
+    assert isinstance(data, DatasetInterface)
 
 
 def test_get_variables_metdata():
