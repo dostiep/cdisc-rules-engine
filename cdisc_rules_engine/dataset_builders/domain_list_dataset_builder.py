@@ -1,5 +1,6 @@
 from cdisc_rules_engine.dataset_builders.base_dataset_builder import BaseDatasetBuilder
 import pandas as pd
+from cdisc_rules_engine.models.dataset.pandas_dataset import PandasDataset
 
 
 class DomainListDatasetBuilder(BaseDatasetBuilder):
@@ -14,6 +15,8 @@ class DomainListDatasetBuilder(BaseDatasetBuilder):
         0  ae.xpt  ec.xpt
         """
 
-        return pd.DataFrame(
-            {ds["domain"]: ds["filename"] for ds in self.datasets}, index=[0]
+        return PandasDataset(
+            pd.DataFrame(
+                {ds["domain"]: ds["filename"] for ds in self.datasets}, index=[0]
+            )
         )

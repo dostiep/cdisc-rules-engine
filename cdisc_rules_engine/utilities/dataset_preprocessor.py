@@ -94,7 +94,8 @@ class DatasetPreprocessor:
     def _download_dataset(self, filename: str) -> pd.DataFrame:
         return self._data_service.get_dataset(
             dataset_name=os.path.join(os.path.dirname(self._dataset_path), filename)
-        )
+            # )
+        ).data
 
     def _merge_datasets(
         self,

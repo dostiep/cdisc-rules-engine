@@ -32,6 +32,9 @@ from cdisc_rules_engine.utilities.utils import (
 )
 from cdisc_rules_engine.utilities.sdtm_utilities import get_class_and_domain_metadata
 
+from cdisc_rules_engine.models.dataset.dataset_interface import DatasetInterface
+from cdisc_rules_engine.models.dataset.pandas_dataset import PandasDataset
+
 
 def cached_dataset(dataset_type: str):
     """
@@ -115,8 +118,12 @@ class BaseDataService(DataServiceInterface, ABC):
         )
 
     def concat_split_datasets(
-        self, func_to_call: Callable, dataset_names: List[str], **kwargs
-    ) -> pd.DataFrame:
+        self,
+        func_to_call: Callable,
+        dataset_names: List[str],
+        **kwargs
+        # ) -> pd.DataFrame:
+    ) -> DatasetInterface:
         """
         Accepts a list of split dataset filenames, asynchronously downloads
         all of them and merges into a single DataFrame.
@@ -128,18 +135,19 @@ class BaseDataService(DataServiceInterface, ABC):
         drop_duplicates: bool = kwargs.pop("drop_duplicates", False)
 
         # download datasets asynchronously
-        datasets: Iterable[pd.DataFrame] = self._async_get_datasets(
+        # datasets: Iterable[pd.DataFrame] = self._async_get_datasets(
+        datasets: Iterable[DatasetInterface] = self._async_get_datasets(
             func_to_call, dataset_names, **kwargs
         )
 
         # concat datasets
         full_dataset: pd.DataFrame = pd.concat(
-            [dataset for dataset in datasets],
+            [dataset.data for dataset in datasets],
             ignore_index=True,
         )
         if drop_duplicates:
             full_dataset.drop_duplicates()
-        return full_dataset
+        return PandasDataset(full_dataset)
 
     def get_dataset_class(
         self, dataset: pd.DataFrame, file_path: str, datasets: List[dict], domain: str
@@ -251,8 +259,12 @@ class BaseDataService(DataServiceInterface, ABC):
         )
 
     def _async_get_datasets(
-        self, function_to_call: Callable, dataset_names: List[str], **kwargs
-    ) -> Iterator[pd.DataFrame]:
+        self,
+        function_to_call: Callable,
+        dataset_names: List[str],
+        **kwargs
+        # ) -> Iterator[pd.DataFrame]:
+    ) -> Iterator[DatasetInterface]:
         """
         The method uses multithreading to download each
         dataset in dataset_names param in parallel.

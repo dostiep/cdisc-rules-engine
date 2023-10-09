@@ -16,6 +16,8 @@ from cdisc_rules_engine import config
 from cdisc_rules_engine.utilities import sdtm_utilities
 import os
 
+from cdisc_rules_engine.models.dataset.dataset_interface import DatasetInterface
+
 
 class BaseDatasetBuilder:
     def __init__(
@@ -47,7 +49,8 @@ class BaseDatasetBuilder:
         self.library_metadata = library_metadata
 
     @abstractmethod
-    def build(self) -> pd.DataFrame:
+    # def build(self) -> pd.DataFrame:
+    def build(self) -> DatasetInterface:
         """
         Returns correct dataframe to operate on
         """

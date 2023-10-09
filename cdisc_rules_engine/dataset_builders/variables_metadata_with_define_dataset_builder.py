@@ -1,6 +1,7 @@
 from cdisc_rules_engine.dataset_builders.base_dataset_builder import BaseDatasetBuilder
 from typing import List
 import pandas as pd
+from cdisc_rules_engine.models.dataset.pandas_dataset import PandasDataset
 
 
 class VariablesMetadataWithDefineDatasetBuilder(BaseDatasetBuilder):
@@ -36,9 +37,11 @@ class VariablesMetadataWithDefineDatasetBuilder(BaseDatasetBuilder):
             self.dataset_path, drop_duplicates=True
         )
         define_metadata: pd.DataFrame = pd.DataFrame(variable_metadata)
-        return content_metadata.merge(
-            define_metadata,
-            left_on="variable_name",
-            right_on="define_variable_name",
-            how="left",
+        return PandasDataset(
+            content_metadata.merge(
+                define_metadata,
+                left_on="variable_name",
+                right_on="define_variable_name",
+                how="left",
+            )
         )

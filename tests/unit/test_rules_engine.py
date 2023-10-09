@@ -224,6 +224,7 @@ def test_validate_rule_cross_dataset_check(
         ).validate_single_rule(
             dataset_rule_equal_to, os.path.join("path", "ec.xpt"), datasets, "EC"
         )
+
         assert validation_result == [
             {
                 "executionStatus": "success",
@@ -1455,37 +1456,41 @@ def test_validate_split_dataset_metadata(
     Unit test for validating metadata of a split dataset.
     """
     # create two dataframes
-    first_dataset_part: pd.DataFrame = pd.DataFrame.from_dict(
-        {
-            "dataset_size": [
-                5,
-            ],
-            "dataset_location": [
-                "ec.xpt",
-            ],
-            "dataset_name": [
-                "EC",
-            ],
-            "dataset_label": [
-                "EC Label",
-            ],
-        }
+    first_dataset_part: PandasDataset = PandasDataset(
+        pd.DataFrame.from_dict(
+            {
+                "dataset_size": [
+                    5,
+                ],
+                "dataset_location": [
+                    "ec.xpt",
+                ],
+                "dataset_name": [
+                    "EC",
+                ],
+                "dataset_label": [
+                    "EC Label",
+                ],
+            }
+        )
     )
-    second_dataset_part: pd.DataFrame = pd.DataFrame.from_dict(
-        {
-            "dataset_size": [
-                10,
-            ],
-            "dataset_location": [
-                "ec_1.xpt",
-            ],
-            "dataset_name": [
-                "EC",
-            ],
-            "dataset_label": [
-                "EC Label",
-            ],
-        }
+    second_dataset_part: PandasDataset = PandasDataset(
+        pd.DataFrame.from_dict(
+            {
+                "dataset_size": [
+                    10,
+                ],
+                "dataset_location": [
+                    "ec_1.xpt",
+                ],
+                "dataset_name": [
+                    "EC",
+                ],
+                "dataset_label": [
+                    "EC Label",
+                ],
+            }
+        )
     )
 
     # mock blob storage call and execute the validation

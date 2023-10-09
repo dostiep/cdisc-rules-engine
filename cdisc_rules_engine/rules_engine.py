@@ -219,7 +219,7 @@ class RulesEngine:
         """
         kwargs = {}
         builder = self.get_dataset_builder(rule, dataset_path, datasets, domain)
-        dataset = builder.get_dataset().data
+        dataset = builder.get_dataset()
 
         # Update rule for certain rule types
         # SPECIAL CASES FOR RULE TYPES ###############################
@@ -260,7 +260,7 @@ class RulesEngine:
             targets: List[
                 str
             ] = self.data_processor.filter_dataset_columns_by_metadata_and_rule(
-                dataset.columns.tolist(), define_metadata, library_metadata, rule
+                dataset.data.columns.tolist(), define_metadata, library_metadata, rule
             )
             rule_copy = deepcopy(rule)
             updated_conditions = RuleProcessor.duplicate_conditions_for_all_targets(
@@ -270,14 +270,14 @@ class RulesEngine:
             # When duplicating conditions,
             # rule should be copied to prevent updates to concurrent rule executions
             return self.execute_rule(
-                rule_copy, dataset, dataset_path, datasets, domain, **kwargs
+                rule_copy, dataset.data, dataset_path, datasets, domain, **kwargs
             )
 
         kwargs["ct_packages"] = list(self.ct_packages)
 
         logger.info(f"Using dataset build by: {builder.__class__}")
         return self.execute_rule(
-            rule, dataset, dataset_path, datasets, domain, **kwargs
+            rule, dataset.data, dataset_path, datasets, domain, **kwargs
         )
 
     def execute_rule(
