@@ -1,7 +1,6 @@
 import re
 from typing import List, Optional, Set, Union, Tuple
 from cdisc_rules_engine.models.dataset.dataset_interface import DatasetInterface
-from cdisc_rules_engine.models.dataset.pandas_dataset import PandasDataset
 from cdisc_rules_engine.models.library_metadata_container import (
     LibraryMetadataContainer,
 )
@@ -229,7 +228,8 @@ class RuleProcessor:
             # stop function execution if no operations have been provided
             return dataset
 
-        dataset_copy = dataset.copy()
+        # dataset_copy = dataset.copy()
+        dataset_copy = dataset
         for operation in operations:
             # change -- pattern to domain name
             original_target: str = operation.get("name")
@@ -244,9 +244,7 @@ class RuleProcessor:
             operation_params = OperationParams(
                 operation_id=operation.get("id"),
                 operation_name=operation.get("operator"),
-                # TODO: Once data reading is updated dataset_copy will be a
-                # DatasetInterface so this conversion will not be necessary
-                dataframe=PandasDataset(dataset_copy),
+                dataframe=dataset_copy,
                 target=target,
                 original_target=original_target,
                 domain=domain,
@@ -271,9 +269,7 @@ class RuleProcessor:
             )
 
             # execute operation
-            dataset_copy = self._execute_operation(
-                operation_params, PandasDataset(dataset_copy)
-            ).data
+            dataset_copy = self._execute_operation(operation_params, dataset_copy)
 
             logger.info(
                 f"Processed rule operation. "
@@ -282,7 +278,10 @@ class RuleProcessor:
         return dataset_copy
 
     def _execute_operation(
-        self, operation_params: OperationParams, dataset: pd.DataFrame
+        # self, operation_params: OperationParams, dataset: pd.DataFrame
+        self,
+        operation_params: OperationParams,
+        dataset: DatasetInterface,
     ):
         """
         Internal method that executes the given operation.
@@ -334,7 +333,9 @@ class RuleProcessor:
 
     def is_current_domain(self, dataset, target_domain):
         if not self.is_relationship_dataset(target_domain):
-            return "DOMAIN" in dataset and dataset["DOMAIN"][0] == target_domain
+            return (
+                "DOMAIN" in dataset.data and dataset.data["DOMAIN"][0] == target_domain
+            )
         else:
             # Always lookup relationship datasets when performing operations on them.
             return False

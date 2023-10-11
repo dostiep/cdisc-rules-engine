@@ -24,6 +24,8 @@ from cdisc_rules_engine.operations.parent_library_model_column_order import (
 from cdisc_rules_engine.services.cache import InMemoryCacheService
 from cdisc_rules_engine.services.data_services import LocalDataService
 
+from cdisc_rules_engine.models.dataset.dataset_interface import DatasetInterface
+
 
 @pytest.mark.parametrize(
     "data, model_metadata, standard_metadata",
@@ -107,7 +109,7 @@ from cdisc_rules_engine.services.data_services import LocalDataService
     ],
 )
 def test_get_parent_column_order_from_library(
-    data: dict,
+    data: DatasetInterface,
     operation_params: OperationParams,
     model_metadata: dict,
     standard_metadata: dict,
@@ -270,7 +272,7 @@ def test_get_parent_column_order_from_library(
     ],
 )
 def test_get_parent_findings_class_column_order_from_library(
-    data: dict,
+    data: DatasetInterface,
     operation_params: OperationParams,
     model_metadata: dict,
     standard_metadata: dict,
@@ -341,7 +343,11 @@ def test_get_parent_findings_class_column_order_from_library(
             data_service,
             library_metadata,
         )
-        result: pd.DataFrame = operation.execute()
+        # result: pd.DataFrame = operation.execute()
+        result = operation.execute()
+
+        print(result)
+
         variables: List[str] = [
             "STUDYID",
             "DOMAIN",

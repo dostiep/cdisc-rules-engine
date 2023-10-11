@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-import pandas as pd
+from cdisc_rules_engine.models.dataset.dataset_interface import DatasetInterface
 
 
 @dataclass
@@ -13,7 +13,7 @@ class OperationParams:
 
     operation_id: str
     operation_name: str
-    dataframe: pd.DataFrame
+    dataframe: DatasetInterface
     domain: str
     dataset_path: str
     directory_path: str

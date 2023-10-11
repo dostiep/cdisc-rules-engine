@@ -18,6 +18,8 @@ from cdisc_rules_engine.constants.classes import (
     EVENTS,
 )
 
+from cdisc_rules_engine.models.dataset.pandas_dataset import PandasDataset
+
 
 @patch("cdisc_rules_engine.services.data_services.LocalDataService.read_metadata")
 def test_get_dataset_metadata(mock_read_metadata: MagicMock, dataset_metadata: dict):
@@ -119,7 +121,8 @@ def test_get_raw_dataset_metadata(
     ],
 )
 def test_get_dataset_class(datasets, data, expected_class, filename):
-    df = pd.DataFrame.from_dict(data)
+    # df = pd.DataFrame.from_dict(data)
+    df = PandasDataset(pd.DataFrame.from_dict(data))
     mock_cache_service = MagicMock()
     library_metadata = LibraryMetadataContainer(
         standard_metadata={
@@ -141,7 +144,8 @@ def test_get_dataset_class(datasets, data, expected_class, filename):
 
 
 def test_get_dataset_class_without_standard_and_version():
-    df = pd.DataFrame.from_dict({"UNKNOWN": ["test"]})
+    # df = pd.DataFrame.from_dict({"UNKNOWN": ["test"]})
+    df = PandasDataset(pd.DataFrame.from_dict({"UNKNOWN": ["test"]}))
     mock_cache_service = MagicMock()
     mock_cache_service.get.return_value = {
         "classes": [{"name": "SPECIAL PURPOSE", "datasets": [{"name": "DM"}]}]
@@ -158,8 +162,12 @@ def test_get_dataset_class_associated_domains():
         {"domain": "APCE", "filename": "ap.xpt"},
         {"domain": "CE", "filename": "ce.xpt"},
     ]
-    ap_dataset = pd.DataFrame.from_dict({"DOMAIN": ["APCE"]})
-    ce_dataset = pd.DataFrame.from_dict({"DOMAIN": ["CE"], "CETERM": ["test"]})
+    # ap_dataset = pd.DataFrame.from_dict({"DOMAIN": ["APCE"]})
+    # ce_dataset = pd.DataFrame.from_dict({"DOMAIN": ["CE"], "CETERM": ["test"]})
+    ap_dataset = PandasDataset(pd.DataFrame.from_dict({"DOMAIN": ["APCE"]}))
+    ce_dataset = PandasDataset(
+        pd.DataFrame.from_dict({"DOMAIN": ["CE"], "CETERM": ["test"]})
+    )
     data_bundle_path = "cdisc/databundle"
     path_to_dataset_map: dict = {
         os.path.join(data_bundle_path, "ap.xpt"): ap_dataset,

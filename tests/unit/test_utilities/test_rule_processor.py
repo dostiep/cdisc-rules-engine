@@ -21,6 +21,7 @@ from cdisc_rules_engine.constants.classes import (
     EVENTS,
     INTERVENTIONS,
 )
+from cdisc_rules_engine.models.dataset.pandas_dataset import PandasDataset
 
 
 @pytest.mark.parametrize(
@@ -353,7 +354,7 @@ def test_rule_applies_to_class(
     outcome,
 ):
     processor = RuleProcessor(mock_data_service, InMemoryCacheService())
-    dataset_mock = pd.DataFrame.from_dict(data)
+    dataset_mock = PandasDataset(pd.DataFrame.from_dict(data))
     mock_data_service.get_dataset_class.return_value = class_name
     with patch(
         "cdisc_rules_engine.services.data_services.LocalDataService.get_dataset",
@@ -413,8 +414,10 @@ def test_perform_rule_operation(mock_data_service):
             },
         ],
     }
-    df = pd.DataFrame.from_dict(
-        {"AESTDY": [11, 12, 40, 59, 59], "DOMAIN": ["AE", "AE", "AE", "AE", "AE"]}
+    df = PandasDataset(
+        pd.DataFrame.from_dict(
+            {"AESTDY": [11, 12, 40, 59, 59], "DOMAIN": ["AE", "AE", "AE", "AE", "AE"]}
+        )
     )
     processor = RuleProcessor(mock_data_service, InMemoryCacheService())
     with patch(
@@ -430,14 +433,16 @@ def test_perform_rule_operation(mock_data_service):
             standard="sdtmig",
             standard_version="3-1-2",
         )
-        assert "$avg_aestdy" in result
-        assert "$unique_aestdy" in result
-        assert "$max_aestdy" in result
-        assert "$min_aestdy" in result
-        assert result["$max_aestdy"][0] == df["AESTDY"].max()
-        assert result["$min_aestdy"][0] == df["AESTDY"].min()
-        assert result["$avg_aestdy"][0] == df["AESTDY"].mean()
-        assert result["$unique_aestdy"].equals(pd.Series([{11, 12, 40, 59}] * len(df)))
+        assert "$avg_aestdy" in result.data
+        assert "$unique_aestdy" in result.data
+        assert "$max_aestdy" in result.data
+        assert "$min_aestdy" in result.data
+        assert result.data["$max_aestdy"][0] == df.data["AESTDY"].max()
+        assert result.data["$min_aestdy"][0] == df.data["AESTDY"].min()
+        assert result.data["$avg_aestdy"][0] == df.data["AESTDY"].mean()
+        assert result.data["$unique_aestdy"].equals(
+            pd.Series([{11, 12, 40, 59}] * len(df.data))
+        )
 
 
 def test_perform_rule_operation_with_grouping(mock_data_service):
@@ -494,13 +499,15 @@ def test_perform_rule_operation_with_grouping(mock_data_service):
             },
         ],
     }
-    df = pd.DataFrame.from_dict(
-        {
-            "AESTDY": [10, 11, 40, 59],
-            "USUBJID": [1, 200, 1, 200],
-            "AESEQ": [1, 2, 3, 4],
-            "DOMAIN": ["AE", "AE", "AE", "AE"],
-        }
+    df = PandasDataset(
+        pd.DataFrame.from_dict(
+            {
+                "AESTDY": [10, 11, 40, 59],
+                "USUBJID": [1, 200, 1, 200],
+                "AESEQ": [1, 2, 3, 4],
+                "DOMAIN": ["AE", "AE", "AE", "AE"],
+            }
+        )
     )
     processor = RuleProcessor(mock_data_service, InMemoryCacheService())
     with patch(
@@ -516,13 +523,13 @@ def test_perform_rule_operation_with_grouping(mock_data_service):
             standard="sdtmig",
             standard_version="3-1-2",
         )
-        assert "$avg_aestdy" in data
-        assert data["$avg_aestdy"].values.tolist() == [25, 35, 25, 35]
-        assert "$max_aestdy" in data
-        assert data["$max_aestdy"].values.tolist() == [40, 59, 40, 59]
-        assert "$min_aestdy" in data
-        assert data["$min_aestdy"].values.tolist() == [10, 11, 10, 11]
-        assert data[["USUBJID", "$unique_aestdy"]].equals(
+        assert "$avg_aestdy" in data.data
+        assert data.data["$avg_aestdy"].values.tolist() == [25, 35, 25, 35]
+        assert "$max_aestdy" in data.data
+        assert data.data["$max_aestdy"].values.tolist() == [40, 59, 40, 59]
+        assert "$min_aestdy" in data.data
+        assert data.data["$min_aestdy"].values.tolist() == [10, 11, 10, 11]
+        assert data.data[["USUBJID", "$unique_aestdy"]].equals(
             pd.DataFrame.from_dict(
                 {
                     "USUBJID": [
@@ -601,13 +608,15 @@ def test_perform_rule_operation_with_multi_key_grouping(mock_data_service):
             },
         ],
     }
-    df = pd.DataFrame.from_dict(
-        {
-            "AESTDY": [10, 11, 40, 59, 30, 112],
-            "USUBJID": [1, 200, 1, 200, 200, 1],
-            "DOMAIN": ["AE", "AE", "AE", "AE", "AE", "AE"],
-            "STUDYID": ["A", "A", "A", "A", "B", "B"],
-        }
+    df = PandasDataset(
+        pd.DataFrame.from_dict(
+            {
+                "AESTDY": [10, 11, 40, 59, 30, 112],
+                "USUBJID": [1, 200, 1, 200, 200, 1],
+                "DOMAIN": ["AE", "AE", "AE", "AE", "AE", "AE"],
+                "STUDYID": ["A", "A", "A", "A", "B", "B"],
+            }
+        )
     )
     processor = RuleProcessor(mock_data_service, InMemoryCacheService())
     with patch(
@@ -623,12 +632,12 @@ def test_perform_rule_operation_with_multi_key_grouping(mock_data_service):
             standard="sdtmig",
             standard_version="3-1-2",
         )
-        assert "$avg_aestdy" in data
-        assert data["$avg_aestdy"].values.tolist() == [25, 35, 25, 35, 30, 112]
-        assert "$max_aestdy" in data
-        assert data["$max_aestdy"].values.tolist() == [40, 59, 40, 59, 30, 112]
-        assert "$min_aestdy" in data
-        assert data["$min_aestdy"].values.tolist() == [10, 11, 10, 11, 30, 112]
+        assert "$avg_aestdy" in data.data
+        assert data.data["$avg_aestdy"].values.tolist() == [25, 35, 25, 35, 30, 112]
+        assert "$max_aestdy" in data.data
+        assert data.data["$max_aestdy"].values.tolist() == [40, 59, 40, 59, 30, 112]
+        assert "$min_aestdy" in data.data
+        assert data.data["$min_aestdy"].values.tolist() == [10, 11, 10, 11, 30, 112]
 
 
 def test_perform_rule_operation_with_null_operations(mock_data_service):
@@ -656,8 +665,10 @@ def test_perform_rule_operation_with_null_operations(mock_data_service):
         ],
         "operations": None,
     }
-    df = pd.DataFrame.from_dict(
-        {"AESTDY": [11, 12, 40, 59], "USUBJID": [1, 200, 1, 200]}
+    df = PandasDataset(
+        pd.DataFrame.from_dict(
+            {"AESTDY": [11, 12, 40, 59], "USUBJID": [1, 200, 1, 200]}
+        )
     )
     processor = RuleProcessor(mock_data_service, InMemoryCacheService())
     new_data = processor.perform_rule_operations(
@@ -669,7 +680,7 @@ def test_perform_rule_operation_with_null_operations(mock_data_service):
         standard="sdtmig",
         standard_version="3-1-2",
     )
-    assert df.equals(new_data)
+    assert df.data.equals(new_data.data)
 
 
 @patch(
@@ -694,24 +705,26 @@ def test_perform_extract_metadata_operation(
     )
 
     # call rule processor
-    dataset = pd.DataFrame.from_dict(
-        {
-            "RDOMAIN": [
-                "EC",
-                "EC",
-                "EC",
-            ],
-            "IDVAR": [
-                "ECSEQ",
-                "ECSEQ",
-                "ECSEQ",
-            ],
-            "IDVARVAL": [
-                1,
-                2,
-                3,
-            ],
-        }
+    dataset = PandasDataset(
+        pd.DataFrame.from_dict(
+            {
+                "RDOMAIN": [
+                    "EC",
+                    "EC",
+                    "EC",
+                ],
+                "IDVAR": [
+                    "ECSEQ",
+                    "ECSEQ",
+                    "ECSEQ",
+                ],
+                "IDVARVAL": [
+                    1,
+                    2,
+                    3,
+                ],
+            }
+        )
     )
 
     mock = MagicMock()
@@ -735,15 +748,13 @@ def test_perform_extract_metadata_operation(
     )
 
     # check result
-    expected_dataset = dataset.copy()
+    expected_dataset = dataset.data
     expected_dataset["$dataset_name"] = [
         "SUPPEC",
         "SUPPEC",
         "SUPPEC",
     ]
-    print(dataset_after_operation)
-    print(expected_dataset)
-    assert dataset_after_operation.equals(expected_dataset)
+    assert dataset_after_operation.data.equals(expected_dataset)
 
 
 def test_add_comparator_to_conditions(mock_data_service):

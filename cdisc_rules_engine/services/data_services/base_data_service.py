@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 import os
 import numpy as np
 import pandas as pd
+import dask.dataframe as dd
 
 
 from cdisc_rules_engine.constants.domains import AP_DOMAIN_LENGTH
@@ -34,6 +35,7 @@ from cdisc_rules_engine.utilities.sdtm_utilities import get_class_and_domain_met
 
 from cdisc_rules_engine.models.dataset.dataset_interface import DatasetInterface
 from cdisc_rules_engine.models.dataset.pandas_dataset import PandasDataset
+from cdisc_rules_engine.models.dataset.dask_dataset import DaskDataset
 
 
 def cached_dataset(dataset_type: str):
@@ -102,8 +104,12 @@ class BaseDataService(DataServiceInterface, ABC):
         self.library_metadata = kwargs.get("library_metadata")
 
     def get_dataset_by_type(
-        self, dataset_name: str, dataset_type: str, **params
-    ) -> pd.DataFrame:
+        self,
+        dataset_name: str,
+        dataset_type: str,
+        **params
+        # ) -> pd.DataFrame:
+    ):
         """
         Generic function to return dataset based on the type.
         dataset_type param can be: contents, metadata, variables_metadata.
@@ -141,16 +147,39 @@ class BaseDataService(DataServiceInterface, ABC):
         )
 
         # concat datasets
-        full_dataset: pd.DataFrame = pd.concat(
-            [dataset.data for dataset in datasets],
-            ignore_index=True,
-        )
+        if any(isinstance(df, DaskDataset) for df in datasets):
+            full_dataset: DaskDataset = DaskDataset(
+                dd.concat(
+                    [dataset.data for dataset in datasets],
+                    ignore_index=True,
+                )
+            )
+        else:
+            full_dataset: PandasDataset = PandasDataset(
+                pd.concat(
+                    [dataset.data for dataset in datasets],
+                    ignore_index=True,
+                )
+            )
         if drop_duplicates:
-            full_dataset.drop_duplicates()
-        return PandasDataset(full_dataset)
+            full_dataset.data.drop_duplicates()
+        return full_dataset
+
+        # full_dataset: pd.DataFrame = pd.concat(
+        #     [dataset.data for dataset in datasets],
+        #     ignore_index=True,
+        # )
+        # if drop_duplicates:
+        #     full_dataset.drop_duplicates()
+        # return PandasDataset(full_dataset)
 
     def get_dataset_class(
-        self, dataset: pd.DataFrame, file_path: str, datasets: List[dict], domain: str
+        # self, dataset: pd.DataFrame, file_path: str, datasets: List[dict], domain: str
+        self,
+        dataset: DatasetInterface,
+        file_path: str,
+        datasets: List[dict],
+        domain: str,
     ) -> Optional[str]:
         if self._contains_topic_variable(dataset, "TERM"):
             return EVENTS
@@ -187,9 +216,9 @@ class BaseDataService(DataServiceInterface, ABC):
         Check if AP-- domain.
         """
         return (
-            "DOMAIN" in dataset
-            and self._domain_starts_with(dataset["DOMAIN"].values[0], "AP")
-            and len(dataset["DOMAIN"].values[0]) == AP_DOMAIN_LENGTH
+            "DOMAIN" in dataset.data
+            and self._domain_starts_with(dataset.data["DOMAIN"].values[0], "AP")
+            and len(dataset.data["DOMAIN"].values[0]) == AP_DOMAIN_LENGTH
         )
 
     def _get_associated_persons_inherit_class(
@@ -198,7 +227,7 @@ class BaseDataService(DataServiceInterface, ABC):
         """
         Check with inherit class AP-- belongs to.
         """
-        domain = dataset["DOMAIN"].values[0]
+        domain = dataset.data["DOMAIN"].values[0]
         ap_suffix = domain[2:]
         directory_path = get_directory_path(file_path)
         if len(datasets) > 1:
@@ -224,10 +253,10 @@ class BaseDataService(DataServiceInterface, ABC):
         Checks if the given dataset-class string ends with a particular variable string.
         Returns True/False
         """
-        if "DOMAIN" not in dataset:
+        if "DOMAIN" not in dataset.data:
             return False
-        domain = dataset["DOMAIN"].values[0]
-        return domain.upper() + variable in dataset
+        domain = dataset.data["DOMAIN"].values[0]
+        return domain.upper() + variable in dataset.data
 
     def _domain_starts_with(self, domain, variable):
         """
@@ -248,8 +277,12 @@ class BaseDataService(DataServiceInterface, ABC):
         )
 
     async def _async_get_dataset(
-        self, function_to_call: Callable, dataset_name: str, **kwargs
-    ) -> pd.DataFrame:
+        self,
+        function_to_call: Callable,
+        dataset_name: str,
+        **kwargs
+        # ) -> pd.DataFrame:
+    ) -> DatasetInterface:
         """
         Asynchronously executes passed function_to_call.
         """

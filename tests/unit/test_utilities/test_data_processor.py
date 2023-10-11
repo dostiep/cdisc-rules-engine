@@ -8,20 +8,25 @@ from cdisc_rules_engine.services.cache.in_memory_cache_service import (
 )
 from cdisc_rules_engine.utilities.data_processor import DataProcessor
 
+from cdisc_rules_engine.models.dataset.dataset_interface import DatasetInterface
+from cdisc_rules_engine.models.dataset.pandas_dataset import PandasDataset
+
 
 @pytest.mark.parametrize(
     "data",
     [
         (
-            pd.DataFrame.from_dict(
-                {
-                    "RDOMAIN": ["AE", "EC", "EC", "AE"],
-                    "IDVAR": ["AESEQ", "ECSEQ", "ECSEQ", "AESEQ"],
-                    "IDVARVAL": [1, 2, 1, 3],
-                }
+            PandasDataset(
+                pd.DataFrame.from_dict(
+                    {
+                        "RDOMAIN": ["AE", "EC", "EC", "AE"],
+                        "IDVAR": ["AESEQ", "ECSEQ", "ECSEQ", "AESEQ"],
+                        "IDVARVAL": [1, 2, 1, 3],
+                    }
+                )
             )
         ),
-        (pd.DataFrame.from_dict({"RSUBJID": [1, 4, 6000]})),
+        (PandasDataset(pd.DataFrame.from_dict({"RSUBJID": [1, 4, 6000]}))),
     ],
 )
 def test_preprocess_relationship_dataset(data):
@@ -43,21 +48,25 @@ def test_preprocess_relationship_dataset(data):
             "filename": "dm.xpt",
         },
     ]
-    ae = pd.DataFrame.from_dict(
-        {
-            "AESTDY": [4, 5, 6],
-            "STUDYID": [101, 201, 300],
-            "AESEQ": [1, 2, 3],
-        }
+    ae = PandasDataset(
+        pd.DataFrame.from_dict(
+            {
+                "AESTDY": [4, 5, 6],
+                "STUDYID": [101, 201, 300],
+                "AESEQ": [1, 2, 3],
+            }
+        )
     )
-    ec = pd.DataFrame.from_dict(
-        {
-            "ECSTDY": [500, 4],
-            "STUDYID": [201, 101],
-            "ECSEQ": [2, 1],
-        }
+    ec = PandasDataset(
+        pd.DataFrame.from_dict(
+            {
+                "ECSTDY": [500, 4],
+                "STUDYID": [201, 101],
+                "ECSEQ": [2, 1],
+            }
+        )
     )
-    dm = pd.DataFrame.from_dict({"USUBJID": [1, 2, 3, 4, 5, 6000]})
+    dm = PandasDataset(pd.DataFrame.from_dict({"USUBJID": [1, 2, 3, 4, 5, 6000]}))
     path_to_dataset_map: dict = {
         os.path.join("path", "ae.xpt"): ae,
         os.path.join("path", "ec.xpt"): ec,
@@ -72,14 +81,16 @@ def test_preprocess_relationship_dataset(data):
         reference_data = data_processor.preprocess_relationship_dataset(
             "path", data, datasets
         )
-        if "IDVAR" in data:
-            idvars = data["IDVAR"]
-            domains = data["RDOMAIN"]
+        if "IDVAR" in data.data:
+            idvars = data.data["IDVAR"]
+            domains = data.data["RDOMAIN"]
             for i, idvar in enumerate(idvars):
                 assert idvar in reference_data[domains[i]]
-        elif "RSUBJID" in data:
+        elif "RSUBJID" in data.data:
             assert "RSUBJID" in reference_data["DM"]
-            assert pd.np.array_equal(reference_data["DM"]["RSUBJID"], dm["USUBJID"])
+            assert pd.np.array_equal(
+                reference_data["DM"]["RSUBJID"], dm.data["USUBJID"]
+            )
 
 
 def test_filter_dataset_columns_by_metadata_and_rule():
@@ -134,121 +145,127 @@ def test_merge_datasets_on_relationship_columns():
     Unit test for DataProcessor.merge_datasets_on_relationship_columns method.
     """
     # prepare data
-    left_dataset: pd.DataFrame = pd.DataFrame.from_dict(
-        {
-            "USUBJID": [
-                "CDISC01",
-                "CDISC01",
-                "CDISC01",
-            ],
-            "DOMAIN": [
-                "AE",
-                "AE",
-                "AE",
-            ],
-            "AESEQ": [
-                1,
-                2,
-                3,
-            ],
-        }
+    left_dataset: DatasetInterface = PandasDataset(
+        pd.DataFrame.from_dict(
+            {
+                "USUBJID": [
+                    "CDISC01",
+                    "CDISC01",
+                    "CDISC01",
+                ],
+                "DOMAIN": [
+                    "AE",
+                    "AE",
+                    "AE",
+                ],
+                "AESEQ": [
+                    1,
+                    2,
+                    3,
+                ],
+            }
+        )
     )
-    right_dataset: pd.DataFrame = pd.DataFrame.from_dict(
-        {
-            "USUBJID": [
-                "CDISC01",
-                "CDISC01",
-                "CDISC01",
-                "CDISC01",
-            ],
-            "RDOMAIN": [
-                "AE",
-                "AE",
-                "AE",
-                "AE",
-            ],
-            "QNAM": [
-                "TEST",
-                "TEST",
-                "TEST",
-                "TEST_1",
-            ],
-            "IDVAR": [
-                "AESEQ",
-                "AESEQ",
-                "AESEQ",
-                "AESEQ",
-            ],
-            "IDVARVAL": [
-                "1.0",
-                "2",
-                "3.0",
-                "3.0",
-            ],
-        }
+    right_dataset: DatasetInterface = PandasDataset(
+        pd.DataFrame.from_dict(
+            {
+                "USUBJID": [
+                    "CDISC01",
+                    "CDISC01",
+                    "CDISC01",
+                    "CDISC01",
+                ],
+                "RDOMAIN": [
+                    "AE",
+                    "AE",
+                    "AE",
+                    "AE",
+                ],
+                "QNAM": [
+                    "TEST",
+                    "TEST",
+                    "TEST",
+                    "TEST_1",
+                ],
+                "IDVAR": [
+                    "AESEQ",
+                    "AESEQ",
+                    "AESEQ",
+                    "AESEQ",
+                ],
+                "IDVARVAL": [
+                    "1.0",
+                    "2",
+                    "3.0",
+                    "3.0",
+                ],
+            }
+        )
     )
 
     # call the tested function and check the results
-    merged_df: pd.DataFrame = DataProcessor.merge_datasets_on_relationship_columns(
+    merged_df: DatasetInterface = DataProcessor.merge_datasets_on_relationship_columns(
         left_dataset=left_dataset,
         right_dataset=right_dataset,
         right_dataset_domain_name="SUPPAE",
         column_with_names="IDVAR",
         column_with_values="IDVARVAL",
     )
-    expected_df: pd.DataFrame = pd.DataFrame.from_dict(
-        {
-            "USUBJID": [
-                "CDISC01",
-                "CDISC01",
-                "CDISC01",
-                "CDISC01",
-            ],
-            "DOMAIN": [
-                "AE",
-                "AE",
-                "AE",
-                "AE",
-            ],
-            "AESEQ": [
-                1.0,
-                2.0,
-                3.0,
-                3.0,
-            ],
-            "USUBJID.SUPPAE": [
-                "CDISC01",
-                "CDISC01",
-                "CDISC01",
-                "CDISC01",
-            ],
-            "RDOMAIN": [
-                "AE",
-                "AE",
-                "AE",
-                "AE",
-            ],
-            "QNAM": [
-                "TEST",
-                "TEST",
-                "TEST",
-                "TEST_1",
-            ],
-            "IDVAR": [
-                "AESEQ",
-                "AESEQ",
-                "AESEQ",
-                "AESEQ",
-            ],
-            "IDVARVAL": [
-                1.0,
-                2.0,
-                3.0,
-                3.0,
-            ],
-        }
+    expected_df: DatasetInterface = PandasDataset(
+        pd.DataFrame.from_dict(
+            {
+                "USUBJID": [
+                    "CDISC01",
+                    "CDISC01",
+                    "CDISC01",
+                    "CDISC01",
+                ],
+                "DOMAIN": [
+                    "AE",
+                    "AE",
+                    "AE",
+                    "AE",
+                ],
+                "AESEQ": [
+                    1.0,
+                    2.0,
+                    3.0,
+                    3.0,
+                ],
+                "USUBJID.SUPPAE": [
+                    "CDISC01",
+                    "CDISC01",
+                    "CDISC01",
+                    "CDISC01",
+                ],
+                "RDOMAIN": [
+                    "AE",
+                    "AE",
+                    "AE",
+                    "AE",
+                ],
+                "QNAM": [
+                    "TEST",
+                    "TEST",
+                    "TEST",
+                    "TEST_1",
+                ],
+                "IDVAR": [
+                    "AESEQ",
+                    "AESEQ",
+                    "AESEQ",
+                    "AESEQ",
+                ],
+                "IDVARVAL": [
+                    1.0,
+                    2.0,
+                    3.0,
+                    3.0,
+                ],
+            }
+        )
     )
-    assert merged_df.equals(expected_df)
+    assert merged_df.data.equals(expected_df.data)
 
 
 def test_merge_datasets_on_string_relationship_columns():
@@ -258,118 +275,124 @@ def test_merge_datasets_on_string_relationship_columns():
     are of a string type.
     """
     # prepare data
-    left_dataset: pd.DataFrame = pd.DataFrame.from_dict(
-        {
-            "USUBJID": [
-                "CDISC01",
-                "CDISC01",
-                "CDISC01",
-            ],
-            "DOMAIN": [
-                "AE",
-                "AE",
-                "AE",
-            ],
-            "AESEQ": [
-                "CDISC_IA",
-                "CDISC_IB",
-                "CDISC_IC",
-            ],
-        }
+    left_dataset: DatasetInterface = PandasDataset(
+        pd.DataFrame.from_dict(
+            {
+                "USUBJID": [
+                    "CDISC01",
+                    "CDISC01",
+                    "CDISC01",
+                ],
+                "DOMAIN": [
+                    "AE",
+                    "AE",
+                    "AE",
+                ],
+                "AESEQ": [
+                    "CDISC_IA",
+                    "CDISC_IB",
+                    "CDISC_IC",
+                ],
+            }
+        )
     )
-    right_dataset: pd.DataFrame = pd.DataFrame.from_dict(
-        {
-            "USUBJID": [
-                "CDISC01",
-                "CDISC01",
-                "CDISC01",
-                "CDISC01",
-            ],
-            "RDOMAIN": [
-                "AE",
-                "AE",
-                "AE",
-                "AE",
-            ],
-            "QNAM": [
-                "TEST",
-                "TEST",
-                "TEST",
-                "TEST_1",
-            ],
-            "IDVAR": [
-                "AESEQ",
-                "AESEQ",
-                "AESEQ",
-                "AESEQ",
-            ],
-            "IDVARVAL": [
-                "CDISC_IA",
-                "CDISC_IB",
-                "CDISC_IC",
-                "CDISC_IC",
-            ],
-        }
+    right_dataset: DatasetInterface = PandasDataset(
+        pd.DataFrame.from_dict(
+            {
+                "USUBJID": [
+                    "CDISC01",
+                    "CDISC01",
+                    "CDISC01",
+                    "CDISC01",
+                ],
+                "RDOMAIN": [
+                    "AE",
+                    "AE",
+                    "AE",
+                    "AE",
+                ],
+                "QNAM": [
+                    "TEST",
+                    "TEST",
+                    "TEST",
+                    "TEST_1",
+                ],
+                "IDVAR": [
+                    "AESEQ",
+                    "AESEQ",
+                    "AESEQ",
+                    "AESEQ",
+                ],
+                "IDVARVAL": [
+                    "CDISC_IA",
+                    "CDISC_IB",
+                    "CDISC_IC",
+                    "CDISC_IC",
+                ],
+            }
+        )
     )
 
     # call the tested function and check the results
-    merged_df: pd.DataFrame = DataProcessor.merge_datasets_on_relationship_columns(
+    merged_df: DatasetInterface = DataProcessor.merge_datasets_on_relationship_columns(
         left_dataset=left_dataset,
         right_dataset=right_dataset,
         right_dataset_domain_name="SUPPAE",
         column_with_names="IDVAR",
         column_with_values="IDVARVAL",
     )
-    expected_df: pd.DataFrame = pd.DataFrame.from_dict(
-        {
-            "USUBJID": [
-                "CDISC01",
-                "CDISC01",
-                "CDISC01",
-                "CDISC01",
-            ],
-            "DOMAIN": [
-                "AE",
-                "AE",
-                "AE",
-                "AE",
-            ],
-            "AESEQ": [
-                "CDISC_IA",
-                "CDISC_IB",
-                "CDISC_IC",
-                "CDISC_IC",
-            ],
-            "USUBJID.SUPPAE": [
-                "CDISC01",
-                "CDISC01",
-                "CDISC01",
-                "CDISC01",
-            ],
-            "RDOMAIN": [
-                "AE",
-                "AE",
-                "AE",
-                "AE",
-            ],
-            "QNAM": [
-                "TEST",
-                "TEST",
-                "TEST",
-                "TEST_1",
-            ],
-            "IDVAR": [
-                "AESEQ",
-                "AESEQ",
-                "AESEQ",
-                "AESEQ",
-            ],
-            "IDVARVAL": [
-                "CDISC_IA",
-                "CDISC_IB",
-                "CDISC_IC",
-                "CDISC_IC",
-            ],
-        }
+    expected_df: DatasetInterface = PandasDataset(
+        pd.DataFrame.from_dict(
+            {
+                "USUBJID": [
+                    "CDISC01",
+                    "CDISC01",
+                    "CDISC01",
+                    "CDISC01",
+                ],
+                "DOMAIN": [
+                    "AE",
+                    "AE",
+                    "AE",
+                    "AE",
+                ],
+                "AESEQ": [
+                    "CDISC_IA",
+                    "CDISC_IB",
+                    "CDISC_IC",
+                    "CDISC_IC",
+                ],
+                "USUBJID.SUPPAE": [
+                    "CDISC01",
+                    "CDISC01",
+                    "CDISC01",
+                    "CDISC01",
+                ],
+                "RDOMAIN": [
+                    "AE",
+                    "AE",
+                    "AE",
+                    "AE",
+                ],
+                "QNAM": [
+                    "TEST",
+                    "TEST",
+                    "TEST",
+                    "TEST_1",
+                ],
+                "IDVAR": [
+                    "AESEQ",
+                    "AESEQ",
+                    "AESEQ",
+                    "AESEQ",
+                ],
+                "IDVARVAL": [
+                    "CDISC_IA",
+                    "CDISC_IB",
+                    "CDISC_IC",
+                    "CDISC_IC",
+                ],
+            }
+        )
     )
-    assert merged_df.equals(expected_df)
+    assert merged_df.data.equals(expected_df.data)

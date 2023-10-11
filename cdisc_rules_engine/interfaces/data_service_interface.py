@@ -7,6 +7,8 @@ import pandas as pd
 from cdisc_rules_engine.models.dataset_metadata import DatasetMetadata
 from .cache_service_interface import CacheServiceInterface
 
+from cdisc_rules_engine.models.dataset.dataset_interface import DatasetInterface
+
 
 class DataServiceInterface(ABC):
     """
@@ -25,7 +27,8 @@ class DataServiceInterface(ABC):
         """
 
     @abstractmethod
-    def get_dataset(self, dataset_name: str, **params) -> pd.DataFrame:
+    # def get_dataset(self, dataset_name: str, **params) -> pd.DataFrame:
+    def get_dataset(self, dataset_name: str, **params) -> DatasetInterface:
         """
         Gets dataset from blob storage.
         """
@@ -50,8 +53,12 @@ class DataServiceInterface(ABC):
 
     @abstractmethod
     def get_dataset_by_type(
-        self, dataset_name: str, dataset_type: str, **params
-    ) -> pd.DataFrame:
+        self,
+        dataset_name: str,
+        dataset_type: str,
+        **params
+        # ) -> pd.DataFrame:
+    ):
         """
         Generic function to return dataset based on the type.
         dataset_type param can be: contents, metadata, variables_metadata.
@@ -84,7 +91,11 @@ class DataServiceInterface(ABC):
 
     @abstractmethod
     def get_dataset_class(
-        self, dataset: pd.DataFrame, file_path: str, datasets: List[dict]
+        # self, dataset: pd.DataFrame, file_path: str, datasets: List[dict]
+        self,
+        dataset: DatasetInterface,
+        file_path: str,
+        datasets: List[dict],
     ) -> Optional[str]:
         """
         Returns dataset class based on its contents

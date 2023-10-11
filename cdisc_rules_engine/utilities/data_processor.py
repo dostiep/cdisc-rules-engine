@@ -2,6 +2,7 @@ import asyncio
 from typing import List, Optional, Set
 
 import pandas as pd
+import dask.dataframe as dd
 
 from cdisc_rules_engine.config import config
 from cdisc_rules_engine.exceptions.custom_exceptions import InvalidMatchKeyError
@@ -16,6 +17,10 @@ from cdisc_rules_engine.services.data_services import (
 )
 from cdisc_rules_engine.utilities.utils import search_in_list_of_dicts
 import os
+
+from cdisc_rules_engine.models.dataset.dataset_interface import DatasetInterface
+from cdisc_rules_engine.models.dataset.pandas_dataset import PandasDataset
+from cdisc_rules_engine.models.dataset.dask_dataset import DaskDataset
 
 
 class DataProcessor:
@@ -46,17 +51,21 @@ class DataProcessor:
         return dataframe.iloc[0]
 
     def preprocess_relationship_dataset(
-        self, dataset_path: str, dataset: pd.DataFrame, datasets: List[dict]
+        self,
+        dataset_path: str,
+        # dataset: pd.DataFrame,
+        dataset: DatasetInterface,
+        datasets: List[dict],
     ) -> dict:
         # Get unique RDOMAINS and corresponding ID Var
         reference_data = {}
-        if "RDOMAIN" in dataset:
-            rdomains = dataset["RDOMAIN"].unique()
+        if "RDOMAIN" in dataset.data:
+            rdomains = dataset.data["RDOMAIN"].unique()
             idvar_column_values = self.get_column_values(dataset, "IDVAR").unique()
             reference_data = self.async_get_reference_data(
                 dataset_path, datasets, idvar_column_values, rdomains
             )
-        elif "RSUBJID" in dataset:
+        elif "RSUBJID" in dataset.data:
             # get USUBJID from column in DM dataset
             reference_data = self.get_column_data(
                 dataset_path, datasets, ["USUBJID"], "DM"
@@ -67,15 +76,15 @@ class DataProcessor:
         return reference_data
 
     def get_column_values(self, dataset, column):
-        if column in dataset:
-            return dataset[column]
+        if column in dataset.data:
+            return dataset.data[column]
         return []
 
     def get_columns(self, dataset, columns):
         column_data = {}
         for column in columns:
-            if column in dataset:
-                column_data[column] = dataset[column].values
+            if column in dataset.data:
+                column_data[column] = dataset.data[column].values
         return column_data
 
     def get_column_data(
@@ -114,11 +123,14 @@ class DataProcessor:
 
     @staticmethod
     def filter_dataset_by_match_keys_of_other_dataset(
-        dataset: pd.DataFrame,
+        # dataset: pd.DataFrame,
+        dataset: DatasetInterface,
         dataset_match_keys: List[str],
-        other_dataset: pd.DataFrame,
+        # other_dataset: pd.DataFrame,
+        other_dataset: DatasetInterface,
         other_dataset_match_keys: List[str],
-    ) -> pd.DataFrame:
+        # ) -> pd.DataFrame:
+    ) -> DatasetInterface:
         """
         Returns a DataFrame where values of match keys of
         dataset are equal to values of match keys of other dataset.
@@ -135,18 +147,26 @@ class DataProcessor:
             The result will be: USUBJID  DOMAIN
                                 CDISC009 AE
         """
-        dataset_w_ind = dataset.set_index(dataset_match_keys)
-        other_dataset_w_ind = other_dataset.set_index(other_dataset_match_keys)
+        dataset_w_ind = dataset.data.set_index(dataset_match_keys)
+        other_dataset_w_ind = other_dataset.data.set_index(other_dataset_match_keys)
         condition = dataset_w_ind.index.isin(other_dataset_w_ind.index)
-        return dataset_w_ind[condition].reset_index()
+        # return dataset_w_ind.data[condition].reset_index()
+        result = dataset_w_ind[condition].reset_index()
+        if isinstance(dataset, DaskDataset):
+            return DaskDataset(dd.from_pandas(result, npartitions=2))
+        else:
+            return PandasDataset(result)
 
     @staticmethod
     def filter_parent_dataset_by_supp_dataset(
-        parent_dataset: pd.DataFrame,
-        supp_dataset: pd.DataFrame,
+        # parent_dataset: pd.DataFrame,
+        parent_dataset: DatasetInterface,
+        # supp_dataset: pd.DataFrame,
+        supp_dataset: DatasetInterface,
         column_with_names: str,
         column_with_values: str,
-    ) -> pd.DataFrame:
+        # ) -> pd.DataFrame:
+    ) -> DatasetInterface:
         """
         A wrapper function for convenient filtering of parent dataset by supp dataset.
         Does two things:
@@ -163,26 +183,33 @@ class DataProcessor:
 
     @staticmethod
     def filter_parent_dataset_by_supp_dataset_rdomain(
-        parent_dataset: pd.DataFrame, supp_dataset: pd.DataFrame
-    ) -> pd.DataFrame:
+        # parent_dataset: pd.DataFrame,
+        parent_dataset: DatasetInterface,
+        # supp_dataset: pd.DataFrame
+        supp_dataset: DatasetInterface
+        # ) -> pd.DataFrame:
+    ) -> DatasetInterface:
         """
         Leaves only those rows in parent dataset
         where DOMAIN is the same as RDOMAIN of supp dataset.
         """
-        parent_domain_values: pd.Series = parent_dataset.get("DOMAIN", pd.Series())
-        supp_domain_values: pd.Series = supp_dataset.get("RDOMAIN", pd.Series())
+        parent_domain_values: pd.Series = parent_dataset.data.get("DOMAIN", pd.Series())
+        supp_domain_values: pd.Series = supp_dataset.data.get("RDOMAIN", pd.Series())
         if parent_domain_values.empty or supp_domain_values.empty:
             return parent_dataset
 
-        return parent_dataset[parent_domain_values.isin(supp_domain_values)]
+        return parent_dataset.data[parent_domain_values.isin(supp_domain_values)]
 
     @staticmethod
     def filter_dataset_by_nested_columns_of_other_dataset(
-        dataset: pd.DataFrame,
-        other_dataset: pd.DataFrame,
+        # dataset: pd.DataFrame,
+        dataset: DatasetInterface,
+        # other_dataset: pd.DataFrame,
+        other_dataset: DatasetInterface,
         column_with_names: str,
         column_with_values: str,
-    ) -> pd.DataFrame:
+        # ) -> pd.DataFrame:
+    ) -> DatasetInterface:
         """
         other_dataset has two columns:
             1. list of column names which exist in dataset - column_with_names.
@@ -202,7 +229,7 @@ class DataProcessor:
             where dataset["ECSEQ"] is equal to 100 or 101
             AND dataset["ECNUM"] is equal to 105.
         """
-        grouped = other_dataset.groupby(column_with_names, group_keys=False)
+        grouped = other_dataset.data.groupby(column_with_names, group_keys=False)
 
         def filter_dataset_by_group_values(group) -> pd.DataFrame:
             decimal_group_values: pd.Series = (
@@ -216,47 +243,72 @@ class DataProcessor:
 
         result = grouped.apply(lambda group: filter_dataset_by_group_values(group))
         # grouping breaks sorting, need to sort once again
-        return result.sort_values(list(grouped.groups.keys()))
+        result = result.sort_values(list(grouped.groups.keys()))
+        if isinstance(dataset, DaskDataset):
+            return DaskDataset(dd.from_pandas(result, npartitions=2))
+        else:
+            return PandasDataset(result)
+        # return result.data.sort_values(list(grouped.groups.keys()))
 
     @staticmethod
     def merge_datasets_on_relationship_columns(
-        left_dataset: pd.DataFrame,
-        right_dataset: pd.DataFrame,
+        # left_dataset: pd.DataFrame,
+        left_dataset: DatasetInterface,
+        # right_dataset: pd.DataFrame,
+        right_dataset: DatasetInterface,
         right_dataset_domain_name: str,
         column_with_names: str,
         column_with_values: str,
-    ) -> pd.DataFrame:
+        # ) -> pd.DataFrame:
+    ) -> DatasetInterface:
         """
         Uses full join to merge given datasets on the
         columns that describe their relation.
         """
         # right dataset holds column names of left dataset.
         # all values in the column are the same
-        left_ds_col_name: str = right_dataset[column_with_names][0]
+        left_ds_col_name: str = right_dataset.data[column_with_names][0]
 
         # convert numeric columns to one data type to avoid merging errors
         # there is no point in converting string cols since their data type is the same
         DataProcessor.cast_numeric_cols_to_same_data_type(
             right_dataset, column_with_values, left_dataset, left_ds_col_name
         )
-
-        return pd.merge(
-            left=left_dataset,
-            right=right_dataset,
+        # return pd.merge(
+        #     left=left_dataset,
+        #     right=right_dataset,
+        #     left_on=[left_ds_col_name],
+        #     right_on=[column_with_values],
+        #     how="outer",
+        #     suffixes=("", f".{right_dataset_domain_name}"),
+        # )
+        result = pd.merge(
+            left=left_dataset.data,
+            right=right_dataset.data,
             left_on=[left_ds_col_name],
             right_on=[column_with_values],
             how="outer",
             suffixes=("", f".{right_dataset_domain_name}"),
         )
+        if any(
+            isinstance(dataset, DaskDataset)
+            for dataset in [left_dataset, right_dataset]
+        ):
+            return DaskDataset(dd.from_pandas(result, npartitions=2))
+        else:
+            return PandasDataset(result)
 
     @staticmethod
     def merge_relationship_datasets(
-        left_dataset: pd.DataFrame,
+        # left_dataset: pd.DataFrame,
+        left_dataset: DatasetInterface,
         left_dataset_match_keys: List[str],
-        right_dataset: pd.DataFrame,
+        # right_dataset: pd.DataFrame,
+        right_dataset: DatasetInterface,
         right_dataset_match_keys: List[str],
         right_dataset_domain: dict,
-    ) -> pd.DataFrame:
+        # ) -> pd.DataFrame:
+    ) -> DatasetInterface:
         result = DataProcessor.filter_dataset_by_match_keys_of_other_dataset(
             left_dataset,
             left_dataset_match_keys,
@@ -268,7 +320,13 @@ class DataProcessor:
             right_dataset,
             **right_dataset_domain["relationship_columns"],
         )
-        result = result.reset_index(drop=True)
+        if isinstance(result, DaskDataset):
+            result = DaskDataset(
+                dd.from_pandas(result.data.reset_index(drop=True), npartitions=2)
+            )
+        else:
+            result = PandasDataset(result.data.reset_index(drop=True))
+        # result = result.reset_index(drop=True)
         result = DataProcessor.merge_datasets_on_relationship_columns(
             left_dataset=result,
             right_dataset=right_dataset,
@@ -279,26 +337,38 @@ class DataProcessor:
 
     @staticmethod
     def merge_sdtm_datasets(
-        left_dataset: pd.DataFrame,
-        right_dataset: pd.DataFrame,
+        # left_dataset: pd.DataFrame,
+        left_dataset: DatasetInterface,
+        # right_dataset: pd.DataFrame,
+        right_dataset: DatasetInterface,
         left_dataset_match_keys: List[str],
         right_dataset_match_keys: List[str],
         right_dataset_domain_name: str,
-    ) -> pd.DataFrame:
+        # ) -> pd.DataFrame:
+    ) -> DatasetInterface:
         result = pd.merge(
-            left_dataset,
-            right_dataset,
+            left_dataset.data,
+            right_dataset.data,
             left_on=left_dataset_match_keys,
             right_on=right_dataset_match_keys,
             suffixes=("", f".{right_dataset_domain_name}"),
         )
-        return result
+        # return result
+        if any(
+            isinstance(dataset, DaskDataset)
+            for dataset in [left_dataset, right_dataset]
+        ):
+            return DaskDataset(dd.from_pandas(result, npartitions=2))
+        else:
+            return PandasDataset(result)
 
     @staticmethod
     def cast_numeric_cols_to_same_data_type(
-        left_dataset: pd.DataFrame,
+        # left_dataset: pd.DataFrame,
+        left_dataset: DatasetInterface,
         left_dataset_column: str,
-        right_dataset: pd.DataFrame,
+        # right_dataset: pd.DataFrame,
+        right_dataset: DatasetInterface,
         right_dataset_column: str,
     ):
         """
@@ -322,17 +392,17 @@ class DataProcessor:
         """
         # check if both columns are numeric
         left_is_numeric: bool = DataProcessor.column_contains_numeric(
-            left_dataset[left_dataset_column]
+            left_dataset.data[left_dataset_column]
         )
         right_is_numeric: bool = DataProcessor.column_contains_numeric(
-            right_dataset[right_dataset_column]
+            right_dataset.data[right_dataset_column]
         )
         if left_is_numeric and right_is_numeric:
             # convert to float
-            right_dataset[right_dataset_column] = right_dataset[
+            right_dataset.data[right_dataset_column] = right_dataset.data[
                 right_dataset_column
             ].astype(float)
-            left_dataset[left_dataset_column] = left_dataset[
+            left_dataset.data[left_dataset_column] = left_dataset.data[
                 left_dataset_column
             ].astype(float)
 

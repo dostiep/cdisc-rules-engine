@@ -1,7 +1,6 @@
 from copy import deepcopy
 from typing import List, Union
 
-import pandas as pd
 from business_rules import export_rule_data
 from business_rules.engine import run
 import os
@@ -40,9 +39,7 @@ from cdisc_rules_engine.utilities.utils import (
     serialize_rule,
 )
 from cdisc_rules_engine.dataset_builders import builder_factory
-
-
-import dask.dataframe as dd
+from cdisc_rules_engine.models.dataset.dataset_interface import DatasetInterface
 
 
 class RulesEngine:
@@ -277,13 +274,13 @@ class RulesEngine:
 
         logger.info(f"Using dataset build by: {builder.__class__}")
         return self.execute_rule(
-            rule, dataset.data, dataset_path, datasets, domain, **kwargs
+            rule, dataset, dataset_path, datasets, domain, **kwargs
         )
 
     def execute_rule(
         self,
         rule: dict,
-        dataset: Union[pd.DataFrame, dd.core.DataFrame],
+        dataset: DatasetInterface,
         dataset_path: str,
         datasets: List[dict],
         domain: str,
@@ -305,7 +302,7 @@ class RulesEngine:
         # in condition
         rule_copy = deepcopy(rule)
         updated_conditions = RuleProcessor.duplicate_conditions_for_all_targets(
-            rule["conditions"], dataset.columns.to_list()
+            rule["conditions"], dataset.data.columns.to_list()
         )
         rule_copy["conditions"].set_conditions(updated_conditions)
         # Adding copy for now to avoid updating cached dataset
@@ -333,7 +330,7 @@ class RulesEngine:
                 os.path.dirname(dataset_path), dataset, datasets
             )
         dataset_variable = DatasetVariable(
-            dataset,
+            dataset.data,
             column_prefix_map={"--": domain},
             relationship_data=relationship_data,
             value_level_metadata=value_level_metadata,
