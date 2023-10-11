@@ -343,10 +343,7 @@ def test_get_parent_findings_class_column_order_from_library(
             data_service,
             library_metadata,
         )
-        # result: pd.DataFrame = operation.execute()
-        result = operation.execute()
-
-        print(result)
+        result: pd.DataFrame = operation.execute()
 
         variables: List[str] = [
             "STUDYID",

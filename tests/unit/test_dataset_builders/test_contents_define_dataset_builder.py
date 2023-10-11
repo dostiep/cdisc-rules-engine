@@ -10,6 +10,8 @@ from cdisc_rules_engine.dataset_builders.contents_define_dataset_builder import 
 from cdisc_rules_engine.services.data_services import DummyDataService
 from cdisc_rules_engine.dummy_models.dummy_dataset import DummyDataset
 
+from cdisc_rules_engine.models.dataset.pandas_dataset import PandasDataset
+
 
 test_set1 = (
     [
@@ -321,7 +323,7 @@ def test_contents_define_dataset_builder(
     mock_get_define_metadata.return_value = define_metadata
     kwargs = {}
     kwargs["datasets"] = data_metadata.get("datasets")
-    expected = pd.DataFrame.from_dict(expected)
+    expected = PandasDataset(pd.DataFrame.from_dict(expected))
     datasets = [DummyDataset(data) for data in data_metadata.get("datasets", [])]
 
     result = ContentsDefineDatasetBuilder(
@@ -341,8 +343,8 @@ def test_contents_define_dataset_builder(
         library_metadata=LibraryMetadataContainer(),
     ).build()
     col_names = ["dataset_name", "define_dataset_name"]
-    assert result[col_names].equals(expected[col_names]) or (
-        result.empty and expected.empty
+    assert result.data[col_names].equals(expected.data[col_names]) or (
+        result.data.empty and expected.data.empty
     )
 
 
@@ -360,7 +362,7 @@ def test_contents_define_dataset_columns(
     mock_get_define_metadata.return_value = define_metadata
     kwargs = {}
     kwargs["datasets"] = data_metadata.get("datasets")
-    expected = pd.DataFrame.from_dict(expected)
+    expected = PandasDataset(pd.DataFrame.from_dict(expected))
     datasets = [DummyDataset(data) for data in data_metadata.get("datasets", [])]
 
     result = ContentsDefineDatasetBuilder(
@@ -379,7 +381,7 @@ def test_contents_define_dataset_columns(
         standard_version="3-4",
         library_metadata=LibraryMetadataContainer(),
     ).build()
-    exp_columns = result.columns.tolist()
+    exp_columns = result.data.columns.tolist()
     req_columns = [
         "dataset_size",
         "dataset_location",
