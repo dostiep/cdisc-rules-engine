@@ -61,7 +61,6 @@ class BaseDatasetBuilder:
         if is_split_dataset(self.datasets, self.domain):
             # Handle split datasets for content checks.
             # A content check is any check that is not in the list of rule types
-            # dataset: pd.DataFrame = self.data_service.concat_split_datasets(
             dataset: DatasetInterface = self.data_service.concat_split_datasets(
                 func_to_call=self.build,
                 dataset_names=self.get_corresponding_datasets_names(),
@@ -69,7 +68,6 @@ class BaseDatasetBuilder:
             )
         else:
             # single dataset. the most common case
-            # dataset: pd.DataFrame = self.build()
             dataset: DatasetInterface = self.build()
         return dataset
 
@@ -78,7 +76,6 @@ class BaseDatasetBuilder:
         if is_split_dataset(self.datasets, self.domain):
             # Handle split datasets for content checks.
             # A content check is any check that is not in the list of rule types
-            # dataset: pd.DataFrame = self.data_service.concat_split_datasets(
             dataset: DatasetInterface = self.data_service.concat_split_datasets(
                 func_to_call=self.data_service.get_dataset,
                 dataset_names=self.get_corresponding_datasets_names(),
@@ -86,7 +83,6 @@ class BaseDatasetBuilder:
             )
         else:
             # single dataset. the most common case
-            # dataset: pd.DataFrame = self.data_service.get_dataset(self.dataset_path)
             dataset: DatasetInterface = self.data_service.get_dataset(self.dataset_path)
         return dataset
 

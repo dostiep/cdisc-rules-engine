@@ -53,7 +53,6 @@ class DataProcessor:
     def preprocess_relationship_dataset(
         self,
         dataset_path: str,
-        # dataset: pd.DataFrame,
         dataset: DatasetInterface,
         datasets: List[dict],
     ) -> dict:
@@ -123,13 +122,10 @@ class DataProcessor:
 
     @staticmethod
     def filter_dataset_by_match_keys_of_other_dataset(
-        # dataset: pd.DataFrame,
         dataset: DatasetInterface,
         dataset_match_keys: List[str],
-        # other_dataset: pd.DataFrame,
         other_dataset: DatasetInterface,
         other_dataset_match_keys: List[str],
-        # ) -> pd.DataFrame:
     ) -> DatasetInterface:
         """
         Returns a DataFrame where values of match keys of
@@ -150,7 +146,6 @@ class DataProcessor:
         dataset_w_ind = dataset.data.set_index(dataset_match_keys)
         other_dataset_w_ind = other_dataset.data.set_index(other_dataset_match_keys)
         condition = dataset_w_ind.index.isin(other_dataset_w_ind.index)
-        # return dataset_w_ind.data[condition].reset_index()
         result = dataset_w_ind[condition].reset_index()
         if isinstance(dataset, DaskDataset):
             return DaskDataset(dd.from_pandas(result, npartitions=2))
@@ -159,13 +154,10 @@ class DataProcessor:
 
     @staticmethod
     def filter_parent_dataset_by_supp_dataset(
-        # parent_dataset: pd.DataFrame,
         parent_dataset: DatasetInterface,
-        # supp_dataset: pd.DataFrame,
         supp_dataset: DatasetInterface,
         column_with_names: str,
         column_with_values: str,
-        # ) -> pd.DataFrame:
     ) -> DatasetInterface:
         """
         A wrapper function for convenient filtering of parent dataset by supp dataset.
@@ -183,11 +175,7 @@ class DataProcessor:
 
     @staticmethod
     def filter_parent_dataset_by_supp_dataset_rdomain(
-        # parent_dataset: pd.DataFrame,
-        parent_dataset: DatasetInterface,
-        # supp_dataset: pd.DataFrame
-        supp_dataset: DatasetInterface
-        # ) -> pd.DataFrame:
+        parent_dataset: DatasetInterface, supp_dataset: DatasetInterface
     ) -> DatasetInterface:
         """
         Leaves only those rows in parent dataset
@@ -202,13 +190,10 @@ class DataProcessor:
 
     @staticmethod
     def filter_dataset_by_nested_columns_of_other_dataset(
-        # dataset: pd.DataFrame,
         dataset: DatasetInterface,
-        # other_dataset: pd.DataFrame,
         other_dataset: DatasetInterface,
         column_with_names: str,
         column_with_values: str,
-        # ) -> pd.DataFrame:
     ) -> DatasetInterface:
         """
         other_dataset has two columns:
@@ -248,18 +233,14 @@ class DataProcessor:
             return DaskDataset(dd.from_pandas(result, npartitions=2))
         else:
             return PandasDataset(result)
-        # return result.data.sort_values(list(grouped.groups.keys()))
 
     @staticmethod
     def merge_datasets_on_relationship_columns(
-        # left_dataset: pd.DataFrame,
         left_dataset: DatasetInterface,
-        # right_dataset: pd.DataFrame,
         right_dataset: DatasetInterface,
         right_dataset_domain_name: str,
         column_with_names: str,
         column_with_values: str,
-        # ) -> pd.DataFrame:
     ) -> DatasetInterface:
         """
         Uses full join to merge given datasets on the
@@ -274,14 +255,6 @@ class DataProcessor:
         DataProcessor.cast_numeric_cols_to_same_data_type(
             right_dataset, column_with_values, left_dataset, left_ds_col_name
         )
-        # return pd.merge(
-        #     left=left_dataset,
-        #     right=right_dataset,
-        #     left_on=[left_ds_col_name],
-        #     right_on=[column_with_values],
-        #     how="outer",
-        #     suffixes=("", f".{right_dataset_domain_name}"),
-        # )
         result = pd.merge(
             left=left_dataset.data,
             right=right_dataset.data,
@@ -300,14 +273,11 @@ class DataProcessor:
 
     @staticmethod
     def merge_relationship_datasets(
-        # left_dataset: pd.DataFrame,
         left_dataset: DatasetInterface,
         left_dataset_match_keys: List[str],
-        # right_dataset: pd.DataFrame,
         right_dataset: DatasetInterface,
         right_dataset_match_keys: List[str],
         right_dataset_domain: dict,
-        # ) -> pd.DataFrame:
     ) -> DatasetInterface:
         result = DataProcessor.filter_dataset_by_match_keys_of_other_dataset(
             left_dataset,
@@ -326,7 +296,6 @@ class DataProcessor:
             )
         else:
             result = PandasDataset(result.data.reset_index(drop=True))
-        # result = result.reset_index(drop=True)
         result = DataProcessor.merge_datasets_on_relationship_columns(
             left_dataset=result,
             right_dataset=right_dataset,
@@ -337,14 +306,11 @@ class DataProcessor:
 
     @staticmethod
     def merge_sdtm_datasets(
-        # left_dataset: pd.DataFrame,
         left_dataset: DatasetInterface,
-        # right_dataset: pd.DataFrame,
         right_dataset: DatasetInterface,
         left_dataset_match_keys: List[str],
         right_dataset_match_keys: List[str],
         right_dataset_domain_name: str,
-        # ) -> pd.DataFrame:
     ) -> DatasetInterface:
         result = pd.merge(
             left_dataset.data,
@@ -364,10 +330,8 @@ class DataProcessor:
 
     @staticmethod
     def cast_numeric_cols_to_same_data_type(
-        # left_dataset: pd.DataFrame,
         left_dataset: DatasetInterface,
         left_dataset_column: str,
-        # right_dataset: pd.DataFrame,
         right_dataset: DatasetInterface,
         right_dataset_column: str,
     ):

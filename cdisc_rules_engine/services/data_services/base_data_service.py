@@ -103,13 +103,7 @@ class BaseDataService(DataServiceInterface, ABC):
         self.version = (kwargs.get("standard_version") or "").replace(".", "-")
         self.library_metadata = kwargs.get("library_metadata")
 
-    def get_dataset_by_type(
-        self,
-        dataset_name: str,
-        dataset_type: str,
-        **params
-        # ) -> pd.DataFrame:
-    ):
+    def get_dataset_by_type(self, dataset_name: str, dataset_type: str, **params):
         """
         Generic function to return dataset based on the type.
         dataset_type param can be: contents, metadata, variables_metadata.
@@ -124,11 +118,7 @@ class BaseDataService(DataServiceInterface, ABC):
         )
 
     def concat_split_datasets(
-        self,
-        func_to_call: Callable,
-        dataset_names: List[str],
-        **kwargs
-        # ) -> pd.DataFrame:
+        self, func_to_call: Callable, dataset_names: List[str], **kwargs
     ) -> DatasetInterface:
         """
         Accepts a list of split dataset filenames, asynchronously downloads
@@ -141,7 +131,6 @@ class BaseDataService(DataServiceInterface, ABC):
         drop_duplicates: bool = kwargs.pop("drop_duplicates", False)
 
         # download datasets asynchronously
-        # datasets: Iterable[pd.DataFrame] = self._async_get_datasets(
         datasets: Iterable[DatasetInterface] = self._async_get_datasets(
             func_to_call, dataset_names, **kwargs
         )
@@ -174,7 +163,6 @@ class BaseDataService(DataServiceInterface, ABC):
         # return PandasDataset(full_dataset)
 
     def get_dataset_class(
-        # self, dataset: pd.DataFrame, file_path: str, datasets: List[dict], domain: str
         self,
         dataset: DatasetInterface,
         file_path: str,
@@ -277,11 +265,7 @@ class BaseDataService(DataServiceInterface, ABC):
         )
 
     async def _async_get_dataset(
-        self,
-        function_to_call: Callable,
-        dataset_name: str,
-        **kwargs
-        # ) -> pd.DataFrame:
+        self, function_to_call: Callable, dataset_name: str, **kwargs
     ) -> DatasetInterface:
         """
         Asynchronously executes passed function_to_call.
@@ -292,11 +276,7 @@ class BaseDataService(DataServiceInterface, ABC):
         )
 
     def _async_get_datasets(
-        self,
-        function_to_call: Callable,
-        dataset_names: List[str],
-        **kwargs
-        # ) -> Iterator[pd.DataFrame]:
+        self, function_to_call: Callable, dataset_names: List[str], **kwargs
     ) -> Iterator[DatasetInterface]:
         """
         The method uses multithreading to download each

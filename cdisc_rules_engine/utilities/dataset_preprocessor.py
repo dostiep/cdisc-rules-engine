@@ -44,7 +44,6 @@ class DatasetPreprocessor:
         self._data_service = data_service
         self._rule_processor = RuleProcessor(self._data_service, cache_service)
 
-    # def preprocess(self, rule: dict, datasets: List[dict]) -> pd.DataFrame:
     def preprocess(self, rule: dict, datasets: List[dict]) -> DatasetInterface:
         """
         Preprocesses the dataset by merging it with the
@@ -56,7 +55,6 @@ class DatasetPreprocessor:
 
         rule_targets = self._rule_processor.extract_referenced_variables_from_rule(rule)
         # Get all targets that reference the merge domain.
-        # result: pd.DataFrame = self._dataset.copy()
         result: DatasetInterface = self._dataset
         for domain_details in rule_datasets:
             domain_name: str = domain_details.get("domain_name")
@@ -95,7 +93,6 @@ class DatasetPreprocessor:
     def _is_split_domain(self, domain: str) -> bool:
         return domain == self._dataset_domain
 
-    # def _download_dataset(self, filename: str) -> pd.DataFrame:
     def _download_dataset(self, filename: str) -> DatasetInterface:
         return self._data_service.get_dataset(
             dataset_name=os.path.join(os.path.dirname(self._dataset_path), filename)
@@ -103,13 +100,10 @@ class DatasetPreprocessor:
 
     def _merge_datasets(
         self,
-        # left_dataset: pd.DataFrame,
         left_dataset: DatasetInterface,
         left_dataset_domain_name: str,
-        # right_dataset: pd.DataFrame,
         right_dataset: DatasetInterface,
         right_dataset_domain_details: dict,
-        # ) -> pd.DataFrame:
     ) -> DatasetInterface:
         """
         Merges datasets on their match keys.
@@ -127,7 +121,6 @@ class DatasetPreprocessor:
 
         # merge datasets based on their type
         if self._rule_processor.is_relationship_dataset(right_dataset_domain_name):
-            # result: pd.DataFrame = DataProcessor.merge_relationship_datasets(
             result: DatasetInterface = DataProcessor.merge_relationship_datasets(
                 left_dataset=left_dataset,
                 left_dataset_match_keys=left_dataset_match_keys,
@@ -136,7 +129,6 @@ class DatasetPreprocessor:
                 right_dataset_domain=right_dataset_domain_details,
             )
         else:
-            # result: pd.DataFrame = DataProcessor.merge_sdtm_datasets(
             result: DatasetInterface = DataProcessor.merge_sdtm_datasets(
                 left_dataset=left_dataset,
                 right_dataset=right_dataset,
