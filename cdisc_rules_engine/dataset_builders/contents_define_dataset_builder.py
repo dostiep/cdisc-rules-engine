@@ -1,7 +1,6 @@
 import pandas as pd
 from cdisc_rules_engine.services import logger
 from cdisc_rules_engine.dataset_builders.base_dataset_builder import BaseDatasetBuilder
-from cdisc_rules_engine.models.dataset.pandas_dataset import PandasDataset
 
 
 class ContentsDefineDatasetBuilder(BaseDatasetBuilder):
@@ -48,7 +47,7 @@ class ContentsDefineDatasetBuilder(BaseDatasetBuilder):
         # outer join, so some data contents may be missing or some define metadata may
         # be missing. Replace nans with None
         merged_no_nans = merged.where(pd.notnull(merged), None)
-        return PandasDataset(merged_no_nans)
+        return merged_no_nans
 
     def _get_define_xml_dataframe(self):
         define_col_order = [

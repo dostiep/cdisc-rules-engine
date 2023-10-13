@@ -1042,18 +1042,20 @@ def test_validate_single_rule_not_equal_to(
                     "define_dataset_location": "ae.xpt",
                 }
             ],
-            pd.DataFrame.from_dict(
-                {
-                    "dataset_name": [
-                        "AE",
-                    ],
-                    "dataset_label": [
-                        "Adverse Events",
-                    ],
-                    "dataset_location": [
-                        "te.xpt",
-                    ],
-                }
+            PandasDataset(
+                pd.DataFrame.from_dict(
+                    {
+                        "dataset_name": [
+                            "AE",
+                        ],
+                        "dataset_label": [
+                            "Adverse Events",
+                        ],
+                        "dataset_location": [
+                            "te.xpt",
+                        ],
+                    }
+                )
             ),
             [
                 {
@@ -1082,18 +1084,20 @@ def test_validate_single_rule_not_equal_to(
                     "define_dataset_location": "ae.xpt",
                 }
             ],
-            pd.DataFrame.from_dict(
-                {
-                    "dataset_name": [
-                        "AE",
-                    ],
-                    "dataset_label": [
-                        "Adverse Events",
-                    ],
-                    "dataset_location": [
-                        "ae.xpt",
-                    ],
-                }
+            PandasDataset(
+                pd.DataFrame.from_dict(
+                    {
+                        "dataset_name": [
+                            "AE",
+                        ],
+                        "dataset_label": [
+                            "Adverse Events",
+                        ],
+                        "dataset_location": [
+                            "ae.xpt",
+                        ],
+                    }
+                )
             ),
             [
                 {
@@ -1119,7 +1123,7 @@ def test_validate_dataset_metadata_against_define_xml(
     mock_get_define_xml_metadata_for_domain: MagicMock,
     define_xml_validation_rule: dict,
     define_xml_metadata: dict,
-    dataset_mock: pd.DataFrame,
+    dataset_mock: PandasDataset,
     expected_validation_result: List[dict],
 ):
     """
