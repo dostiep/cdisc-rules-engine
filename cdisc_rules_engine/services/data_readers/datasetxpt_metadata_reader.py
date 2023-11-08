@@ -12,7 +12,7 @@ xport.v56.LOG.disabled = True
 XPORT_LOG.disabled = True
 
 
-class XPTDatasetMetadataReader(MetadataReaderInterface):
+class DatasetXPTMetadataReader(MetadataReaderInterface):
     """
     Responsibility of the class is to read metadata
     from .xpt file.

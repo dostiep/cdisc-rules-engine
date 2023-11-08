@@ -5,8 +5,8 @@ from cdisc_rules_engine.interfaces.metadata_reader_interface import (
 )
 from cdisc_rules_engine.interfaces.factory_interface import FactoryInterface
 
-from cdisc_rules_engine.services.data_readers.dataset_metadata_reader import (
-    XPTDatasetMetadataReader,
+from cdisc_rules_engine.services.data_readers.datasetxpt_metadata_reader import (
+    DatasetXPTMetadataReader,
 )
 from cdisc_rules_engine.services.data_readers.datasetjson_metadata_reader import (
     DatasetJSONMetadataReader,
@@ -15,7 +15,7 @@ from cdisc_rules_engine.services.data_readers.datasetjson_metadata_reader import
 
 class MetadataReaderFactory(FactoryInterface):
     _metadata_reader_map = {
-        "XPT": XPTDatasetMetadataReader,
+        "XPT": DatasetXPTMetadataReader,
         "JSON": DatasetJSONMetadataReader,
     }
 

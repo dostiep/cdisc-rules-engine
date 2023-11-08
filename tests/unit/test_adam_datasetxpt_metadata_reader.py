@@ -3,8 +3,8 @@ This module contains unit tests for Adam DatasetMetadataReader class.
 """
 import os
 
-from cdisc_rules_engine.services.data_readers.dataset_metadata_reader import (
-    XPTDatasetMetadataReader,
+from cdisc_rules_engine.services.data_readers.datasetxpt_metadata_reader import (
+    DatasetXPTMetadataReader,
 )
 
 
@@ -16,7 +16,7 @@ def test_read_metadata():
     test_dataset_path: str = (
         f"{os.path.dirname(__file__)}/../resources/test_adam_dataset.xpt"
     )
-    reader = XPTDatasetMetadataReader()
+    reader = DatasetXPTMetadataReader()
     metadata: dict = reader.read(
         file_path=test_dataset_path, file_name="test_adam_dataset.xpt"
     )
