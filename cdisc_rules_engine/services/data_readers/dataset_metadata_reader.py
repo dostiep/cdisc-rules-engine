@@ -4,12 +4,15 @@ from xport import LOG as XPORT_LOG
 
 from cdisc_rules_engine.services import logger
 from cdisc_rules_engine.services.adam_variable_reader import AdamVariableReader
+from cdisc_rules_engine.interfaces.metadata_reader_interface import (
+    MetadataReaderInterface,
+)
 
 xport.v56.LOG.disabled = True
 XPORT_LOG.disabled = True
 
 
-class XPTDatasetMetadataReader:
+class XPTDatasetMetadataReader(MetadataReaderInterface):
     """
     Responsibility of the class is to read metadata
     from .xpt file.
@@ -17,17 +20,17 @@ class XPTDatasetMetadataReader:
 
     # TODO. Maybe in future it is worth having multiple constructors
     #  like from_bytes, from_file etc. But now there is no immediate need for that.
-    def __init__(self, file_path: str, file_name: str):
+
+    def read(self, file_path: str, file_name: str) -> dict:
+        """
+        Extracts metadata from binary contents of .xpt file.
+        """
         with open(file_path, "rb") as f:
             self._file_contents = f.read()
         self._metadata_container = None
         self._domain_name = None
         self._dataset_name = file_name.split(".")[0].upper()
 
-    def read(self) -> dict:
-        """
-        Extracts metadata from binary contents of .xpt file.
-        """
         dataset_container = xport.v56.loads(self._file_contents)
         dataset_id = next(iter(dataset_container))
         dataset = dataset_container.get(dataset_id)

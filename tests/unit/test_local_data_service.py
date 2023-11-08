@@ -13,8 +13,13 @@ def test_read_metadata():
     Unit test for read_data method.
     """
     dataset_path = f"{os.path.dirname(__file__)}/../resources/test_dataset.xpt"
-    data_service = LocalDataService(MagicMock(), MagicMock(), MagicMock())
+    mock_cache = MagicMock()
+    mock_cache.get.return_value = None
+    data_service = LocalDataService.get_instance(
+        config=ConfigService(), cache_service=mock_cache
+    )
     metadata = data_service.read_metadata(dataset_path)
+
     assert "file_metadata" in metadata
     assert metadata["file_metadata"].get("name") == "test_dataset.xpt"
     assert metadata["file_metadata"].get("size") == 823120
@@ -38,7 +43,7 @@ def test_read_metadata():
 )
 def test_has_all_files(files, expected_result):
     directory = f"{os.path.dirname(__file__)}/../resources"
-    data_service = LocalDataService(MagicMock(), MagicMock(), MagicMock())
+    data_service = LocalDataService(MagicMock(), MagicMock(), MagicMock(), MagicMock())
     assert data_service.has_all_files(directory, files) == expected_result
 
 

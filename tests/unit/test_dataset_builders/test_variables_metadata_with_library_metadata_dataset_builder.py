@@ -94,7 +94,9 @@ def test_variable_metadata_with_library_metadata_dataset_builder(
     library_metadata = LibraryMetadataContainer(standard_metadata=standard_data)
     result = VariablesMetadataWithLibraryMetadataDatasetBuilder(
         rule=None,
-        data_service=LocalDataService(MagicMock(), MagicMock(), MagicMock()),
+        data_service=LocalDataService(
+            MagicMock(), MagicMock(), MagicMock(), MagicMock()
+        ),
         cache_service=cache,
         rule_processor=None,
         data_processor=None,
@@ -272,7 +274,9 @@ def test_variable_metadata_with_library_metadata_dataset_builder_variable_only_i
     )
     result = VariablesMetadataWithLibraryMetadataDatasetBuilder(
         rule=None,
-        data_service=LocalDataService(MagicMock(), MagicMock(), MagicMock()),
+        data_service=LocalDataService(
+            MagicMock(), MagicMock(), MagicMock(), MagicMock()
+        ),
         cache_service=cache,
         rule_processor=None,
         data_processor=None,

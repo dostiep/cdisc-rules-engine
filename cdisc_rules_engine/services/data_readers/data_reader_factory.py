@@ -1,9 +1,8 @@
 from typing import Type
 
-from cdisc_rules_engine.interfaces import (
-    DataReaderInterface,
-    FactoryInterface,
-)
+from cdisc_rules_engine.interfaces.data_reader_interface import DataReaderInterface
+from cdisc_rules_engine.interfaces.factory_interface import FactoryInterface
+
 from cdisc_rules_engine.services.data_readers.xpt_reader import XPTReader
 from cdisc_rules_engine.services.data_readers.json_reader import DatasetJSONReader
 

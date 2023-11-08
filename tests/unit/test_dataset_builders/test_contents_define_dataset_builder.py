@@ -327,7 +327,7 @@ def test_contents_define_dataset_builder(
     result = ContentsDefineDatasetBuilder(
         rule=None,
         data_service=DummyDataService(
-            MagicMock(), MagicMock(), MagicMock(), data=datasets
+            MagicMock(), MagicMock(), MagicMock(), MagicMock(), data=datasets
         ),
         cache_service=None,
         rule_processor=None,
@@ -366,7 +366,7 @@ def test_contents_define_dataset_columns(
     result = ContentsDefineDatasetBuilder(
         rule=None,
         data_service=DummyDataService(
-            MagicMock(), MagicMock(), MagicMock(), data=datasets
+            MagicMock(), MagicMock(), MagicMock(), MagicMock(), data=datasets
         ),
         cache_service=None,
         rule_processor=None,

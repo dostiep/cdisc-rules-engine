@@ -34,7 +34,7 @@ def test_preprocess_no_datasets_in_rule(dataset_rule_equal_to_error_objects: dic
         }
     )
     datasets: List[dict] = [{"domain": "AE", "filename": "ae.xpt"}]
-    data_service = LocalDataService(MagicMock(), MagicMock(), MagicMock())
+    data_service = LocalDataService(MagicMock(), MagicMock(), MagicMock(), MagicMock())
     preprocessor = DatasetPreprocessor(
         dataset, "AE", "path", data_service, InMemoryCacheService()
     )
@@ -151,7 +151,7 @@ def test_preprocess(mock_get_dataset: MagicMock, dataset_rule_equal_to: dict):
         {"domain": "TS", "filename": "ts.xpt"},
     ]
 
-    data_service = LocalDataService(MagicMock(), MagicMock(), MagicMock())
+    data_service = LocalDataService(MagicMock(), MagicMock(), MagicMock(), MagicMock())
     preprocessor = DatasetPreprocessor(
         ec_dataset,
         "EC",
@@ -289,7 +289,7 @@ def test_preprocess_relationship_dataset(
         },
     ]
 
-    data_service = LocalDataService(MagicMock(), MagicMock(), MagicMock())
+    data_service = LocalDataService(MagicMock(), MagicMock(), MagicMock(), MagicMock())
     preprocessor = DatasetPreprocessor(
         ec_dataset,
         "EC",
@@ -577,7 +577,7 @@ def test_preprocess_with_merge_comparison(
         dataset_name
     ]
 
-    data_service = LocalDataService(MagicMock(), MagicMock(), MagicMock())
+    data_service = LocalDataService(MagicMock(), MagicMock(), MagicMock(), MagicMock())
     preprocessor = DatasetPreprocessor(
         target_dataset,
         "EC",

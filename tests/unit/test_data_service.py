@@ -28,7 +28,7 @@ def test_get_dataset_metadata(mock_read_metadata: MagicMock, dataset_metadata: d
     cache_mock = MagicMock()
     cache_mock.get = lambda cache_key: None
 
-    data_service = LocalDataService(cache_mock, MagicMock(), MagicMock())
+    data_service = LocalDataService(cache_mock, MagicMock(), MagicMock(), MagicMock())
     actual_metadata: pd.DataFrame = data_service.get_dataset_metadata(
         dataset_name="dataset_name"
     )
@@ -57,7 +57,7 @@ def test_get_raw_dataset_metadata(
     cache_mock = MagicMock()
     cache_mock.get = lambda cache_key: None
 
-    data_service = LocalDataService(cache_mock, MagicMock(), MagicMock())
+    data_service = LocalDataService(cache_mock, MagicMock(), MagicMock(), MagicMock())
     actual_metadata: DatasetMetadata = data_service.get_raw_dataset_metadata(
         dataset_name="dataset_name"
     )
@@ -130,6 +130,7 @@ def test_get_dataset_class(datasets, data, expected_class, filename):
         mock_cache_service,
         MagicMock(),
         MagicMock(),
+        MagicMock(),
         standard="sdtmig",
         standard_version="3-4",
         library_metadata=library_metadata,
@@ -146,7 +147,9 @@ def test_get_dataset_class_without_standard_and_version():
     mock_cache_service.get.return_value = {
         "classes": [{"name": "SPECIAL PURPOSE", "datasets": [{"name": "DM"}]}]
     }
-    data_service = LocalDataService(mock_cache_service, MagicMock(), MagicMock())
+    data_service = LocalDataService(
+        mock_cache_service, MagicMock(), MagicMock(), MagicMock()
+    )
     with pytest.raises(Exception):
         data_service.get_dataset_class(
             df, "dm.xpt", [{"domain": "DM", "filename": "dm.xpt"}], "DM"
@@ -170,7 +173,9 @@ def test_get_dataset_class_associated_domains():
         return_value=ap_dataset,
         side_effect=lambda dataset_name: path_to_dataset_map[dataset_name],
     ):
-        data_service = LocalDataService(MagicMock(), MagicMock(), MagicMock())
+        data_service = LocalDataService(
+            MagicMock(), MagicMock(), MagicMock(), MagicMock()
+        )
         filepath = f"{data_bundle_path}/ce.xpt"
         class_name = data_service.get_dataset_class(
             ap_dataset, filepath, datasets, "CE"

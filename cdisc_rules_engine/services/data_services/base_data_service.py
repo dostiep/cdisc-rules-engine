@@ -22,7 +22,15 @@ from cdisc_rules_engine.constants.classes import (
 from cdisc_rules_engine.models.dataset_types import DatasetTypes
 from cdisc_rules_engine.services import logger
 from cdisc_rules_engine.services.cdisc_library_service import CDISCLibraryService
-from cdisc_rules_engine.services.data_readers import DataReaderFactory
+
+from cdisc_rules_engine.services.data_readers.data_reader_factory import (
+    DataReaderFactory,
+)
+from cdisc_rules_engine.services.data_readers.metadata_reader_factory import (
+    MetadataReaderFactory,
+)
+
+
 from cdisc_rules_engine.utilities.utils import (
     convert_library_class_name_to_ct_class,
     get_dataset_cache_key_from_path,
@@ -84,11 +92,15 @@ class BaseDataService(DataServiceInterface, ABC):
         self,
         cache_service: CacheServiceInterface,
         reader_factory: DataReaderFactory,
+        metadata_reader_factory: MetadataReaderFactory,
         config: ConfigInterface,
         **kwargs,
     ):
         self.cache_service = cache_service
         self._reader_factory = reader_factory
+
+        self._metadata_reader_factory = metadata_reader_factory
+
         self._config = config
         self.cdisc_library_service: CDISCLibraryService = CDISCLibraryService(
             self._config.getValue("CDISC_LIBRARY_API_KEY", ""), self.cache_service

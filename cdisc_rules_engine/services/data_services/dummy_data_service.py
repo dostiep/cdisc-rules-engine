@@ -10,7 +10,12 @@ from cdisc_rules_engine.exceptions.custom_exceptions import DatasetNotFoundError
 from cdisc_rules_engine.interfaces import CacheServiceInterface, ConfigInterface
 from cdisc_rules_engine.models.dataset_metadata import DatasetMetadata
 from cdisc_rules_engine.models.dataset_types import DatasetTypes
-from cdisc_rules_engine.services.data_readers import DataReaderFactory
+from cdisc_rules_engine.services.data_readers.data_reader_factory import (
+    DataReaderFactory,
+)
+from cdisc_rules_engine.services.data_readers.metadata_reader_factory import (
+    MetadataReaderFactory,
+)
 from cdisc_rules_engine.services.data_services import BaseDataService
 
 
@@ -23,11 +28,12 @@ class DummyDataService(BaseDataService):
         self,
         cache_service: CacheServiceInterface,
         reader_factory: DataReaderFactory,
+        metadata_reader_factory: MetadataReaderFactory,
         config: ConfigInterface,
         **kwargs,
     ):
         super(DummyDataService, self).__init__(
-            cache_service, reader_factory, config, **kwargs
+            cache_service, reader_factory, metadata_reader_factory, config, **kwargs
         )
         self.data: List[DummyDataset] = kwargs.get("data")
         self.define_xml: str = kwargs.get("define_xml")
@@ -39,6 +45,7 @@ class DummyDataService(BaseDataService):
         return cls(
             cache_service=cache_service,
             reader_factory=DataReaderFactory(),
+            metadata_reader_factory=MetadataReaderFactory(),
             config=config,
             **kwargs,
         )

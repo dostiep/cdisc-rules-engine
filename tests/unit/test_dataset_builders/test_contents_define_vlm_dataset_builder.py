@@ -74,7 +74,9 @@ def test_contents_define_vlm_dataset_builder(
     )
     result = ContentsDefineVLMDatasetBuilder(
         rule=None,
-        data_service=LocalDataService(MagicMock(), MagicMock(), MagicMock()),
+        data_service=LocalDataService(
+            MagicMock(), MagicMock(), MagicMock(), MagicMock()
+        ),
         cache_service=None,
         rule_processor=None,
         data_processor=None,

@@ -2,26 +2,27 @@ import os
 import json
 import jsonschema
 
-
 from cdisc_rules_engine.services import logger
 from cdisc_rules_engine.services.adam_variable_reader import AdamVariableReader
+from cdisc_rules_engine.interfaces.metadata_reader_interface import (
+    MetadataReaderInterface,
+)
 
 
-class DatasetJSONMetadataReader:
+class DatasetJSONMetadataReader(MetadataReaderInterface):
     """
     Responsibility of the class is to read metadata
     from .json file.
     """
 
-    def __init__(self, file_path: str, file_name: str):
+    def read(self, file_path: str, file_name: str) -> dict:
+        """
+        Extracts metadata from .json file.
+        """
         self._file_path = file_path
         self._domain_name = None
         self._dataset_name = file_name.split(".")[0].upper()
 
-    def read(self) -> dict:
-        """
-        Extracts metadata from .json file.
-        """
         # Load Dataset-JSON Schema
         with open(
             os.path.join("resources", "schema", "dataset.schema.json")

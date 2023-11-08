@@ -94,7 +94,9 @@ def test_contents_define_variables_dataset_builder(
     )
     result = ContentsDefineVariablesDatasetBuilder(
         rule=None,
-        data_service=LocalDataService(MagicMock(), MagicMock(), MagicMock()),
+        data_service=LocalDataService(
+            MagicMock(), MagicMock(), MagicMock(), MagicMock()
+        ),
         cache_service=None,
         rule_processor=None,
         data_processor=None,

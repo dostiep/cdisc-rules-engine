@@ -3,7 +3,7 @@ This module contains unit tests for DatasetJSONMetadataReader class.
 """
 import os
 
-from cdisc_rules_engine.services.datasetjson_metadata_reader import (
+from cdisc_rules_engine.services.data_readers.datasetjson_metadata_reader import (
     DatasetJSONMetadataReader,
 )
 
@@ -17,8 +17,10 @@ def test_read_metadata():
         f"{os.path.dirname(__file__)}/../resources/test_dataset.json"
     )
 
-    reader = DatasetJSONMetadataReader(test_dataset_path, file_name="test_dataset.json")
-    metadata: dict = reader.read()
+    reader = DatasetJSONMetadataReader()
+    metadata: dict = reader.read(
+        file_path=test_dataset_path, file_name="test_dataset.json"
+    )
 
     assert metadata["dataset_name"] == "EX", "Test file has been changed"
     assert metadata["domain_name"] == "EX", "Test file has been changed"
@@ -51,8 +53,10 @@ def test_read_metadata_with_variable_formats():
         f"{os.path.dirname(__file__)}/../resources/test_dataset.json"
     )
 
-    reader = DatasetJSONMetadataReader(test_dataset_path, file_name="test_dataset.json")
-    metadata: dict = reader.read()
+    reader = DatasetJSONMetadataReader()
+    metadata: dict = reader.read(
+        file_path=test_dataset_path, file_name="test_dataset.json"
+    )
 
     assert metadata["variable_formats"] == [
         "",

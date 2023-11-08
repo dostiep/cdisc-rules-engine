@@ -3,7 +3,9 @@ This module contains unit tests for Adam DatasetMetadataReader class.
 """
 import os
 
-from cdisc_rules_engine.services.dataset_metadata_reader import XPTDatasetMetadataReader
+from cdisc_rules_engine.services.data_readers.dataset_metadata_reader import (
+    XPTDatasetMetadataReader,
+)
 
 
 def test_read_metadata():
@@ -14,10 +16,10 @@ def test_read_metadata():
     test_dataset_path: str = (
         f"{os.path.dirname(__file__)}/../resources/test_adam_dataset.xpt"
     )
-    reader = XPTDatasetMetadataReader(
-        test_dataset_path, file_name="test_adam_dataset.xpt"
+    reader = XPTDatasetMetadataReader()
+    metadata: dict = reader.read(
+        file_path=test_dataset_path, file_name="test_adam_dataset.xpt"
     )
-    metadata: dict = reader.read()
     assert metadata["adam_info"] == {
         "categorization_scheme": {"CRIT1": 1},
         "w_indexes": {"R2BASE": 2},
