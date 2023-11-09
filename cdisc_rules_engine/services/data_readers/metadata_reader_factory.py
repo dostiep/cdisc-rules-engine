@@ -4,43 +4,38 @@ from cdisc_rules_engine.interfaces.metadata_reader_interface import (
     MetadataReaderInterface,
 )
 from cdisc_rules_engine.interfaces.factory_interface import FactoryInterface
-
-from cdisc_rules_engine.services.data_readers.datasetxpt_metadata_reader import (
-    DatasetXPTMetadataReader,
-)
-from cdisc_rules_engine.services.data_readers.datasetjson_metadata_reader import (
-    DatasetJSONMetadataReader,
-)
+from cdisc_rules_engine.enums.dataformat_types import DataFormatTypes
 
 
 class MetadataReaderFactory(FactoryInterface):
-    _metadata_reader_map = {
-        "XPT": DatasetXPTMetadataReader,
-        "JSON": DatasetJSONMetadataReader,
-    }
-
     def __init__(self, service_name: str = None):
         self._default_service_name = service_name
 
     @classmethod
     def register_service(cls, name: str, service: Type[MetadataReaderInterface]):
         """
-        Registers a new service in internal _service_map
+        Registers a new service in the DataFormatTypes enum.
         """
         if not name:
             raise ValueError("Service name must not be empty!")
         if not issubclass(service, MetadataReaderInterface):
-            raise TypeError("Implementation of DataReaderInterface required!")
-        cls._metadata_reader_map[name] = service
+            raise TypeError("Implementation of MetadataReaderInterface required!")
+        for format_type in DataFormatTypes:
+            if format_type.name == name:
+                format_type.value[1] = service
+                return
+        raise ValueError(f"Service name '{name}' is not in DataFormatTypes")
 
     def get_service(self, name: str = None, **kwargs) -> MetadataReaderInterface:
         """
-        Get instance of service that matches searched implementation
+        Get an instance of the service that matches the searched implementation.
         """
         service_name = name or self._default_service_name
-        if service_name in self._metadata_reader_map:
-            return self._metadata_reader_map[service_name]()
+        for format_type in DataFormatTypes:
+            if format_type.name == service_name:
+                return format_type.value[1]()
+
         raise ValueError(
-            f"Service name must be in {list(self._metadata_reader_map.keys())}, "
+            f"Service name must be in {[f.name for f in DataFormatTypes]},"
             f"given service name is {service_name}"
         )

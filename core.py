@@ -30,7 +30,7 @@ from version import __version__
 
 
 def valid_data_file(data_path: list) -> Tuple[list, set]:
-    allowed_formats = [format.value for format in DataFormatTypes]
+    allowed_formats = [format.name for format in DataFormatTypes]
     found_formats = set()
     file_list = []
     for file in data_path:
