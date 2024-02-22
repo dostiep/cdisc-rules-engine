@@ -315,6 +315,9 @@ class RulesEngine:
             dataset, domain, dataset_path, self.data_service, self.cache
         )
         dataset = dataset_preprocessor.preprocess(rule_copy, datasets)
+
+        # print(dataset)
+
         dataset = self.rule_processor.perform_rule_operations(
             rule_copy,
             dataset,

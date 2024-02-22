@@ -65,6 +65,9 @@ class Rule:
                 executable_rule["output_variables"] = rule_metadata.get("Outcome", {})[
                     "Output_Variables"
                 ]
+
+            print(executable_rule)
+
             return executable_rule
         else:
             return rule_metadata
