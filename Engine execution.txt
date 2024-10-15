@@ -1,0 +1,66 @@
+core.py validate -s sdtmig -v 3-4 -d ../Examples/sdtmx -dv 2.0 -df json
+
+core.py validate -s sdtmig -v 3-4 -dp ../Examples/sdtmx/ae.xpt -dp ../Examples/sdtmx/cm.xpt -dp ../Examples/sdtmx/dm.xpt -dv 2.0
+
+core.py validate -s sdtmig -v 3-4 -d ../Examples/sdtmx -dv 2.0 -df json
+
+core.py test -s sdtmig -v 3-4 -dp ../Examples/rules/ae.json -dv 2.0 -r ../Examples/rules/rules.json
+
+core.py test -s sdtmig -v 3-4 -dp ../Examples/rules/all.json -dv 2.0 -r ../Examples/rules/rules.json
+
+
+core.py test -s sdtmig -v 3-4 -dp Examples/issues/ae.json -dv 2.0 -r Examples/rules/rules.json
+
+core.py test -s sdtmig -v 3-4 -dp Examples/rules/ae.json -dv 2.0 -r Examples/rules/rules.json
+
+findstr /s /i /m "@pytest.fisture" *.py
+
+core.py validate -s sdtmig -v 3-4 -d Examples/sdtm -dv 2.0 -r CORE-000116
+
+
+core.py validate -s adamig -v 1-3 -d Examples/adam -dv 2.1
+
+core.py test -s sdtmig -v 3-4 -dp Examples/datasets.json -dv 2.0 -r Examples/rules.json
+
+core.py test -s sdtmig -v 3-4 -dp adsl.json -dv 2.0 -r Examples/rules_adsl.json
+
+core.py test -s sdtmig -v 3-4 -dp Examples/adam/adsl.json -dv 2.0 -r Examples/rules.json
+
+
+
+core.py test -s sdtmig -v 3-4 -dp ae.json -dv 2.0 -r Examples/rules_ae.json
+
+core.py test -s adamig -v 1-3 -dp adsl.json -dv 2.0 -r Examples/rules_adsl.json
+
+
+
+
+python -m pytest tests/unit/test_datasetjson_metadata_reader.py
+python -m pytest tests/unit/test_data_service.py
+
+
+core.py test -s sdtmig -v 3-4 -dp ../Examples/sdtmx/ae.json -dv 2.0 -r ../Examples/rules/rules.json
+
+
+
+
+core.py test -s sdtmig -v 3-4 -dp ../Examples/test164/ds.json -dv 2.0 -r ../Examples/test164/rule1.json
+
+core.py test -s sdtmig -v 3-4 -dp ../Examples/test027/mh.json -dv 2.0 -r ../Examples/test027/rule.json
+
+core.py test -s sdtmig -v 3-4 -dp ../Examples/test209/se.json -dv 2.0 -r ../Examples/test209/rule.json
+
+core.py test -s sdtmig -v 3-4 -dp ../Examples/test043/ae.json -dv 2.0 -r ../Examples/test043/rule.json
+
+core.py test -s sdtmig -v 3-4 -dp ../Examples/test272/ts.json -dv 2.0 -r ../Examples/test272/rule.json
+
+core.py test -s sendig -v 3-1 -dp ../Examples/jozef/ds.json -dv 2.0 -r ../Examples/jozef/rule.json
+
+core.py test -s sendig -v 3-1 -dp ../Examples/jozef/Datasets.json -dv 2.0 -r ../Examples/jozef/Request.json
+
+core.py test -s sdtmig -v 3-3 -dp ../Examples/test576/suppae.json -dv 2.0 -r ../Examples/test576/rule.json
+
+
+core.py test -s sendig -v 3-1 -dp ../Examples/test355/Datasets.json -dv 2.0 -r ../Examples/test355/rule355.json
+
+core.py test -s sendig -v 3-1 -dp ../Examples/test350/Datasets.json -dv 2.0 -r ../Examples/test350/rule350.json
